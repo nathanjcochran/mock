@@ -11,6 +11,7 @@ import (
 	"go/types"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -62,6 +63,11 @@ type Result struct {
 	Type string
 }
 
+type Import struct {
+	Name string
+	Path string
+}
+
 func GetIntf(dir, intfName string) (Intf, error) {
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, dir, nil, 0)
@@ -71,9 +77,23 @@ func GetIntf(dir, intfName string) (Intf, error) {
 
 	conf := types.Config{Importer: importer.Default()}
 	for pkgPath, pkgAST := range pkgs {
-		files := []*ast.File{}
+		var (
+			files       = []*ast.File{}
+			fileImports = map[token.Pos][]Import{}
+		)
 		for _, file := range pkgAST.Files {
 			files = append(files, file)
+			var imprts []Import
+			for _, imp := range file.Imports {
+				imprt := Import{
+					Path: strings.Trim(imp.Path.Value, "\""),
+				}
+				if imp.Name != nil {
+					imprt.Name = imp.Name.Name
+				}
+				imprts = append(imprts, imprt)
+			}
+			fileImports[file.Pos()] = imprts
 		}
 
 		pkg, err := conf.Check(pkgPath, fset, files, nil)
@@ -95,6 +115,8 @@ func GetIntf(dir, intfName string) (Intf, error) {
 			return Intf{}, fmt.Errorf("%s is not an interface", intfName)
 		}
 
+		imprts := fileImports[fset.File(intfObj.Pos()).Pos(0)]
+
 		intf := Intf{
 			Name: intfObj.Name(),
 		}
@@ -114,7 +136,7 @@ func GetIntf(dir, intfName string) (Intf, error) {
 				paramObj := paramsType.At(j)
 				param := Param{
 					Name: paramObj.Name(),
-					Type: paramObj.Type().String(),
+					Type: types.TypeString(paramObj.Type(), RelativeTo(pkg, imprts)),
 				}
 				method.Params = append(method.Params, param)
 			}
@@ -127,7 +149,7 @@ func GetIntf(dir, intfName string) (Intf, error) {
 				resultObj := resultsType.At(j)
 				result := Result{
 					Name: resultObj.Name(),
-					Type: resultObj.Type().String(),
+					Type: types.TypeString(resultObj.Type(), RelativeTo(pkg, imprts)),
 				}
 				method.Results = append(method.Results, result)
 			}
@@ -139,4 +161,25 @@ func GetIntf(dir, intfName string) (Intf, error) {
 	}
 
 	return Intf{}, errors.New("Interface not found")
+}
+
+// TODO: Doesn't handle renamed imports
+func RelativeTo(pkg *types.Package, imprts []Import) types.Qualifier {
+	return func(other *types.Package) string {
+		if pkg == other {
+			return ""
+		}
+		for _, imprt := range imprts {
+			if other.Path() == imprt.Path {
+				if imprt.Name == "" {
+					continue
+				}
+				if imprt.Name == "." {
+					return ""
+				}
+				return imprt.Name
+			}
+		}
+		return other.Name()
+	}
 }
