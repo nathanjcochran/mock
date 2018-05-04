@@ -57,7 +57,7 @@ func (m *GetterMock) GetByName(name string) ([]string, error) {
 
 ## Go Generate
 
-To use with go generate, simple place a `go:generate` comment somewhere in
+To use with `go generate`, simple place a `go:generate` comment somewhere in
 your package (e.g. above the interface definition), like so:
 
 `//go:generate mock -o getterMock.go Getter`
@@ -65,10 +65,10 @@ your package (e.g. above the interface definition), like so:
 Note the use of the `-o` flag, which specifies the output file. If this flag
 is not provided, the mocked implementation will be printed to stdout.
 
-Then run the go generate command from the package directory:
+Then run the `go generate` command from the package directory:
 
 `go generate`
 
 Voila! There should now be a `getterMock.go` file containing your new mock, in
-the same package as the interface definition. Subsequent runs of go generate
+the same package as the interface definition. Subsequent runs of `go generate`
 will overwrite the file, so be careful not to edit it!
