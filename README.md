@@ -34,7 +34,8 @@ type Getter interface {
 }
 ```
 
-`mock Getter` will generate an implementation like this:
+`mock Getter` will generate an implementation like this, and print it to
+stdout:
 
 ```go
 package main
@@ -69,9 +70,7 @@ your package (e.g. above the interface definition), like so:
 Note the use of the `-o` flag, which specifies the output file. If this flag
 is not provided, the mocked implementation will be printed to stdout.
 
-Then run the `go generate` command from the package directory:
-
-`go generate`
+Then run the `go generate` command from the package directory.
 
 Voila! There should now be a `getterMock.go` file containing your new mock, in
 the same package as the interface definition. Subsequent runs of `go generate`
