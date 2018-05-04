@@ -81,7 +81,7 @@ func GetInterface(dir, intfName string) (Interface, error) {
 		return Interface{}, fmt.Errorf("Erroring parsing file: %s", err)
 	}
 
-	conf := types.Config{Importer: importer.Default()}
+	conf := types.Config{Importer: importer.For("source", nil)}
 	for pkgPath, pkgAST := range pkgASTs {
 		var (
 			files       = []*ast.File{}
