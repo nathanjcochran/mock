@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/importer"
 	"go/parser"
 	"go/token"
@@ -16,114 +18,55 @@ import (
 )
 
 func main() {
-	dir := flag.String("dir", "", "Directory to search for interface in")
+	dir := flag.String("d", ".", "Directory to search for interface in")
+	outFile := flag.String("o", "", "Output file")
 	flag.Parse()
 
+	// First argument is interface name:
 	args := flag.Args()
 	if len(args) < 1 {
 		log.Fatal("Not enough args")
 	}
-
-	if *dir == "" {
-		// Default to current working directory:
-		var err error
-		*dir, err = os.Getwd()
-		if err != nil {
-			log.Fatalf("Error getting current working directory: %s", err)
-		}
-	}
-
 	intfName := args[0]
+
+	// Parse the package and get info about the interface:
 	intf, err := GetInterface(*dir, intfName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Parse the template:
 	tmpl, err := template.New("default").Parse(defaultTmpl)
 	if err != nil {
 		log.Fatalf("Error parsing template: %s", err)
 	}
 
-	if err := tmpl.Execute(os.Stdout, &intf); err != nil {
+	// Execute/output the template:
+	buf := &bytes.Buffer{}
+	if err := tmpl.Execute(buf, &intf); err != nil {
 		log.Fatalf("Error executing template: %s", err)
 	}
-}
 
-type Interface struct {
-	PackageName   string
-	InterfaceName string
-	Methods       []Method
-	Imports       []Import
-}
-
-type Method struct {
-	Name    string
-	Params  []Param
-	Results []Result
-}
-
-type Param struct {
-	Name     string
-	Type     string
-	Variadic bool
-}
-
-type Result struct {
-	Name string
-	Type string
-}
-
-type Import struct {
-	Name string
-	Path string
-}
-
-func (i *Interface) ImportsString() string {
-	var strs []string
-	for _, imprt := range i.Imports {
-		var str string
-		if imprt.Name != "" {
-			str = fmt.Sprintf("\t%s \"%s\"", imprt.Name, imprt.Path)
-		} else {
-			str = fmt.Sprintf("\t\"%s\"", imprt.Path)
-		}
-		strs = append(strs, str)
+	// Format it with go fmt:
+	result, err := format.Source(buf.Bytes())
+	if err != nil {
+		log.Fatalf("Error formating output: %s", err)
 	}
-	return strings.Join(strs, "\n")
-}
 
-// TODO: Handle unnamed params, and blank-identifier params
-func (m *Method) ParamsString() string {
-	var strs []string
-	for _, param := range m.Params {
-		typ := param.Type
-		if param.Variadic {
-			typ = fmt.Sprintf("...%s", param.Type) // TODO: is type already a slice?
+	// Open the file, if provided, or use stdout:
+	out := os.Stdout
+	if *outFile != "" {
+		out, err = os.Create(*outFile)
+		if err != nil {
+			log.Fatalf("Error creating output file: %s", err)
 		}
+		defer out.Close()
+	}
 
-		str := typ
-		if param.Name != "" {
-			str = fmt.Sprintf("%s %s", param.Name, typ)
-		}
-		strs = append(strs, str)
+	// Write the formatted output to the file:
+	if _, err := out.Write(result); err != nil {
+		log.Fatalf("Error writing to file: %s", err)
 	}
-	return strings.Join(strs, ", ")
-}
-
-func (m *Method) ResultsString() string {
-	var strs []string
-	for _, result := range m.Results {
-		str := result.Type
-		if result.Name != "" {
-			str = fmt.Sprintf("%s %s", result.Name, result.Type)
-		}
-		strs = append(strs, str)
-	}
-	str := strings.Join(strs, ", ")
-	if len(strs) < 2 {
-		return str
-	}
-	return fmt.Sprintf("(%s)", str)
 }
 
 func GetInterface(dir, intfName string) (Interface, error) {
@@ -245,21 +188,9 @@ func Qualify(pkg *types.Package, fileImprts []Import, usedImprts *[]Import) type
 		// that the type is from:
 		for _, imprt := range fileImprts {
 			if other.Path() == imprt.Path {
-				// If the package was not renamed in the import
-				// statment, return the package's name:
-				if imprt.Name == "" {
-					other.Name()
-				}
-				// If the package was brought into this package
-				// in an unqualified manner, don't qualify it:
-				if imprt.Name == "." {
-					return ""
-				}
 				// If the package was only imported for its
-				// side-effects, skip over it, because it's
-				// basically as if it was not imported at all:
+				// side-effects, skip over it:
 				if imprt.Name == "_" {
-					log.Println("Attempt to use type from package imported with the blank identifier")
 					continue
 				}
 
@@ -276,11 +207,23 @@ func Qualify(pkg *types.Package, fileImprts []Import, usedImprts *[]Import) type
 					*usedImprts = append(*usedImprts, imprt)
 				}
 
-				// Otherwise, the import was renamed, so return its name:
-				return imprt.Name
+				// If the package was brought into this package
+				// in an unqualified manner, don't qualify it:
+				if imprt.Name == "." {
+					return ""
+				}
+
+				// If the package was renamed in the import
+				// statement, return it's name:
+				if imprt.Name != "" {
+					return imprt.Name
+				}
+
+				// Othewise, the package was not renamed,
+				// so break out and return the package name:
+				break
 			}
 		}
-		log.Printf("Package not found in file imports: '%s'", other.Path())
 		return other.Name()
 	}
 }

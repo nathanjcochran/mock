@@ -1,14 +1,14 @@
 package example
 
 import (
-	. "go/ast"
 	"html/template"
-	cheese "text/template"
+	. "os"
+	renamed "text/template"
 )
 
-//go:generate mocker MyInterface
+//go:generate mocker -o mock.go MyInterface
 type MyInterface interface {
-	MyMethod1(param1 string, param2 int) (cheese.Template, error)
-	MyMethod2(param1 template.Template) struct{ MyField int }
-	MyMethod3(File) struct{ cheese.Template }
+	MyMethod1(name string, _ int) (err1, err2 error)
+	MyMethod2(templ template.Template) (out struct{ OutTemplate renamed.Template })
+	MyMethod3(File) struct{ MyInterface }
 }
