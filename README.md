@@ -3,6 +3,10 @@
 `mock` is a code generation tool meant to be used with `go generate`. It
 generates simple mock implementations of interfaces for use in testing.
 
+## Installation
+
+`go get -u github.com/nathanjcochran/mock`
+
 ## Usage
 
 The only required argument to `mock` is the name of the interface to mock,
@@ -32,7 +36,7 @@ type Getter interface {
 
 `mock Getter` will generate an implementation like this:
 
-```
+```go
 package main
 
 type GetterMock struct {
