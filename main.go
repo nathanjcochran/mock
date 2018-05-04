@@ -19,7 +19,12 @@ import (
 
 func main() {
 	dir := flag.String("d", ".", "Directory to search for interface in")
-	outFile := flag.String("o", "", "Output file")
+	outFile := flag.String("o", "", "Output file (default stdout)")
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options] interface\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), "Options:\n")
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	// First argument is interface name:
