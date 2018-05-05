@@ -21,8 +21,6 @@ type MyInterfaceMock struct {
 	DotImportVariadicParamCalled       int
 	EmbeddedInterfaceParamStub         func(intf interface{ MyInterface })
 	EmbeddedInterfaceParamCalled       int
-	EmbeddedInterfaceReturnStub        func() (intf interface{ MyInterface })
-	EmbeddedInterfaceReturnCalled      int
 	EmbeddedStructParamStub            func(obj struct{ int })
 	EmbeddedStructParamCalled          int
 	EmbeddedStructReturnStub           func() (obj struct{ int })
@@ -116,11 +114,6 @@ func (m *MyInterfaceMock) DotImportVariadicParam(files ...File) {
 func (m *MyInterfaceMock) EmbeddedInterfaceParam(intf interface{ MyInterface }) {
 	m.EmbeddedInterfaceParamCalled++
 	m.EmbeddedInterfaceParamStub(intf)
-}
-
-func (m *MyInterfaceMock) EmbeddedInterfaceReturn() (intf interface{ MyInterface }) {
-	m.EmbeddedInterfaceReturnCalled++
-	return m.EmbeddedInterfaceReturnStub()
 }
 
 func (m *MyInterfaceMock) EmbeddedStructParam(obj struct{ int }) {
