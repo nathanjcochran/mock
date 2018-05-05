@@ -1,6 +1,6 @@
 package main
 
-var defaultTmpl = `package {{.PackageName}}
+var defaultTmpl = `package {{ .PackageName }}
 {{ if gt (len .Imports) 0 }}
 import (
 {{ .ImportsString }}
@@ -20,7 +20,11 @@ var _ {{ .InterfaceName }} = &{{ .InterfaceName }}Mock{}
 
 func (m *{{ $.InterfaceName }}Mock) {{ .Name }}({{ .NamedParamsString }}) {{ .ResultsString }}{
 	m.{{ .Name }}Called ++
+	{{- if gt (len .Results) 0 }}
 	return m.{{ .Name }}Stub({{ .ParamNamesString }})
+	{{- else }}
+	m.{{ .Name }}Stub({{ .ParamNamesString }})
+	{{- end }}
 }
-{{- end }}
+{{- end -}}
 `

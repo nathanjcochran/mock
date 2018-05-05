@@ -53,7 +53,8 @@ func (m *Method) ParamsString() string {
 	for _, param := range m.Params {
 		typ := param.Type
 		if param.Variadic {
-			typ = fmt.Sprintf("...%s", param.Type) // TODO: is type already a slice?
+			// Remove "[]" and replace with "..."
+			typ = fmt.Sprintf("...%s", strings.TrimPrefix(param.Type, "[]"))
 		}
 
 		str := typ
@@ -75,7 +76,8 @@ func (m *Method) NamedParamsString() string {
 
 		typ := param.Type
 		if param.Variadic {
-			typ = fmt.Sprintf("...%s", param.Type) // TODO: is type already a slice?
+			// Remove "[]" and replace with "..."
+			typ = fmt.Sprintf("...%s", strings.TrimPrefix(param.Type, "[]"))
 		}
 		strs = append(strs, fmt.Sprintf("%s %s", name, typ))
 	}
@@ -90,7 +92,7 @@ func (m *Method) ParamNamesString() string {
 			name = fmt.Sprintf("param%d", i+1)
 		}
 		if param.Variadic {
-			name = fmt.Sprintf("%s...", param.Name)
+			name = fmt.Sprintf("%s...", name)
 		}
 		names = append(names, name)
 	}
