@@ -1,82 +1,95 @@
 package example
 
 import (
+	"fmt"
 	"html/template"
 	. "os"
 	renamed "text/template"
 )
 
 type MyInterfaceMock struct {
-	BlankParamStub                     func(_ string)
-	BlankParamCalled                   int
-	BlankReturnStub                    func() (_ error)
-	BlankReturnCalled                  int
-	BlankVariadicParamStub             func(_ ...string)
-	BlankVariadicParamCalled           int
-	DotImportParamStub                 func(file File)
-	DotImportParamCalled               int
-	DotImportReturnStub                func() (file File)
-	DotImportReturnCalled              int
-	DotImportVariadicParamStub         func(files ...File)
-	DotImportVariadicParamCalled       int
-	EmbeddedInterfaceParamStub         func(intf interface{ MyInterface })
-	EmbeddedInterfaceParamCalled       int
-	EmbeddedStructParamStub            func(obj struct{ int })
-	EmbeddedStructParamCalled          int
-	EmbeddedStructReturnStub           func() (obj struct{ int })
-	EmbeddedStructReturnCalled         int
-	EmbeddedStructVariadicParamStub    func(obj ...struct{ int })
-	EmbeddedStructVariadicParamCalled  int
-	EmptyInterfaceParamStub            func(intf interface{})
-	EmptyInterfaceParamCalled          int
-	EmptyInterfaceReturnStub           func() (intf interface{})
-	EmptyInterfaceReturnCalled         int
-	ImportedParamStub                  func(tmpl template.Template)
-	ImportedParamCalled                int
-	ImportedVariadicParamStub          func(tmpl ...template.Template)
-	ImportedVariadicParamCalled        int
-	InterfaceParamStub                 func(intf interface{ MyFunc(num int) error })
-	InterfaceParamCalled               int
-	InterfaceReturnStub                func() (intf interface{ MyFunc(num int) error })
-	InterfaceReturnCalled              int
-	MultipleUnnamedReturnStub          func() (int, error)
-	MultipleUnnamedReturnCalled        int
-	NamedParamStub                     func(str string)
-	NamedParamCalled                   int
-	NamedReturnStub                    func() (err error)
-	NamedReturnCalled                  int
-	NamedVariadicParamStub             func(strs ...string)
-	NamedVariadicParamCalled           int
-	NoParamsOrReturnStub               func()
-	NoParamsOrReturnCalled             int
-	RenamedImportParamStub             func(tmpl renamed.Template)
-	RenamedImportParamCalled           int
-	RenamedImportReturnStub            func() (tmpl renamed.Template)
-	RenamedImportReturnCalled          int
-	RenamedImportVariadicParamStub     func(tmpls ...renamed.Template)
-	RenamedImportVariadicParamCalled   int
-	SameTypeNamedParamsStub            func(str1 string, str2 string)
-	SameTypeNamedParamsCalled          int
-	SameTypeNamedReturnStub            func() (err1 error, err2 error)
-	SameTypeNamedReturnCalled          int
-	SelfReferentialParamStub           func(intf MyInterface)
-	SelfReferentialParamCalled         int
-	SelfReferentialReturnStub          func() (intf MyInterface)
-	SelfReferentialReturnCalled        int
-	SelfReferentialVariadicParamStub   func(intf ...MyInterface)
-	SelfReferentialVariadicParamCalled int
-	StructParamStub                    func(obj struct{ num int })
-	StructParamCalled                  int
-	StructReturnStub                   func() (obj struct{ num int })
-	StructReturnCalled                 int
-	StructVariadicParamStub            func(objs ...struct{ num int })
-	StructVariadicParamCalled          int
-	UnnamedParamStub                   func(string)
-	UnnamedParamCalled                 int
-	UnnamedReturnStub                  func() error
-	UnnamedReturnCalled                int
-	UnnamedVariadicParamStub           func(...string)
-	UnnamedVariadicParamCalled         int
+	BlankParamStub                           func(_ string)
+	BlankParamCalled                         int
+	BlankReturnStub                          func() (_ error)
+	BlankReturnCalled                        int
+	BlankVariadicParamStub                   func(_ ...string)
+	BlankVariadicParamCalled                 int
+	DotImportParamStub                       func(file File)
+	DotImportParamCalled                     int
+	DotImportReturnStub                      func() (file File)
+	DotImportReturnCalled                    int
+	DotImportVariadicParamStub               func(files ...File)
+	DotImportVariadicParamCalled             int
+	EmbeddedInterfaceParamStub               func(intf interface{ fmt.Stringer })
+	EmbeddedInterfaceParamCalled             int
+	EmbeddedInterfaceReturnStub              func() (intf interface{ fmt.Stringer })
+	EmbeddedInterfaceReturnCalled            int
+	EmbeddedStructParamStub                  func(obj struct{ int })
+	EmbeddedStructParamCalled                int
+	EmbeddedStructReturnStub                 func() (obj struct{ int })
+	EmbeddedStructReturnCalled               int
+	EmbeddedStructVariadicParamStub          func(objs ...struct{ int })
+	EmbeddedStructVariadicParamCalled        int
+	EmptyInterfaceParamStub                  func(intf interface{})
+	EmptyInterfaceParamCalled                int
+	EmptyInterfaceReturnStub                 func() (intf interface{})
+	EmptyInterfaceReturnCalled               int
+	EmptyInterfaceVariadicParamStub          func(intf ...interface{})
+	EmptyInterfaceVariadicParamCalled        int
+	ImportedParamStub                        func(tmpl template.Template)
+	ImportedParamCalled                      int
+	ImportedVariadicParamStub                func(tmpl ...template.Template)
+	ImportedVariadicParamCalled              int
+	InterfaceParamStub                       func(intf interface{ MyFunc(num int) error })
+	InterfaceParamCalled                     int
+	InterfaceReturnStub                      func() (intf interface{ MyFunc(num int) error })
+	InterfaceReturnCalled                    int
+	InterfaceVariadicFuncParamStub           func(intf interface{ MyFunc(nums ...int) error })
+	InterfaceVariadicFuncParamCalled         int
+	InterfaceVariadicFuncReturnStub          func() (intf interface{ MyFunc(nums ...int) error })
+	InterfaceVariadicFuncReturnCalled        int
+	InterfaceVariadicFuncVariadicParamStub   func(intf ...interface{ MyFunc(nums ...int) error })
+	InterfaceVariadicFuncVariadicParamCalled int
+	InterfaceVariadicParamStub               func(intf ...interface{ MyFunc(num int) error })
+	InterfaceVariadicParamCalled             int
+	MultipleUnnamedReturnStub                func() (int, error)
+	MultipleUnnamedReturnCalled              int
+	NamedParamStub                           func(str string)
+	NamedParamCalled                         int
+	NamedReturnStub                          func() (err error)
+	NamedReturnCalled                        int
+	NamedVariadicParamStub                   func(strs ...string)
+	NamedVariadicParamCalled                 int
+	NoParamsOrReturnStub                     func()
+	NoParamsOrReturnCalled                   int
+	RenamedImportParamStub                   func(tmpl renamed.Template)
+	RenamedImportParamCalled                 int
+	RenamedImportReturnStub                  func() (tmpl renamed.Template)
+	RenamedImportReturnCalled                int
+	RenamedImportVariadicParamStub           func(tmpls ...renamed.Template)
+	RenamedImportVariadicParamCalled         int
+	SameTypeNamedParamsStub                  func(str1 string, str2 string)
+	SameTypeNamedParamsCalled                int
+	SameTypeNamedReturnStub                  func() (err1 error, err2 error)
+	SameTypeNamedReturnCalled                int
+	SelfReferentialParamStub                 func(intf MyInterface)
+	SelfReferentialParamCalled               int
+	SelfReferentialReturnStub                func() (intf MyInterface)
+	SelfReferentialReturnCalled              int
+	SelfReferentialVariadicParamStub         func(intf ...MyInterface)
+	SelfReferentialVariadicParamCalled       int
+	StructParamStub                          func(obj struct{ num int })
+	StructParamCalled                        int
+	StructReturnStub                         func() (obj struct{ num int })
+	StructReturnCalled                       int
+	StructVariadicParamStub                  func(objs ...struct{ num int })
+	StructVariadicParamCalled                int
+	UnnamedParamStub                         func(string)
+	UnnamedParamCalled                       int
+	UnnamedReturnStub                        func() error
+	UnnamedReturnCalled                      int
+	UnnamedVariadicParamStub                 func(...string)
+	UnnamedVariadicParamCalled               int
 }
 
 var _ MyInterface = &MyInterfaceMock{}
@@ -111,9 +124,14 @@ func (m *MyInterfaceMock) DotImportVariadicParam(files ...File) {
 	m.DotImportVariadicParamStub(files...)
 }
 
-func (m *MyInterfaceMock) EmbeddedInterfaceParam(intf interface{ MyInterface }) {
+func (m *MyInterfaceMock) EmbeddedInterfaceParam(intf interface{ fmt.Stringer }) {
 	m.EmbeddedInterfaceParamCalled++
 	m.EmbeddedInterfaceParamStub(intf)
+}
+
+func (m *MyInterfaceMock) EmbeddedInterfaceReturn() (intf interface{ fmt.Stringer }) {
+	m.EmbeddedInterfaceReturnCalled++
+	return m.EmbeddedInterfaceReturnStub()
 }
 
 func (m *MyInterfaceMock) EmbeddedStructParam(obj struct{ int }) {
@@ -126,9 +144,9 @@ func (m *MyInterfaceMock) EmbeddedStructReturn() (obj struct{ int }) {
 	return m.EmbeddedStructReturnStub()
 }
 
-func (m *MyInterfaceMock) EmbeddedStructVariadicParam(obj ...struct{ int }) {
+func (m *MyInterfaceMock) EmbeddedStructVariadicParam(objs ...struct{ int }) {
 	m.EmbeddedStructVariadicParamCalled++
-	m.EmbeddedStructVariadicParamStub(obj...)
+	m.EmbeddedStructVariadicParamStub(objs...)
 }
 
 func (m *MyInterfaceMock) EmptyInterfaceParam(intf interface{}) {
@@ -139,6 +157,11 @@ func (m *MyInterfaceMock) EmptyInterfaceParam(intf interface{}) {
 func (m *MyInterfaceMock) EmptyInterfaceReturn() (intf interface{}) {
 	m.EmptyInterfaceReturnCalled++
 	return m.EmptyInterfaceReturnStub()
+}
+
+func (m *MyInterfaceMock) EmptyInterfaceVariadicParam(intf ...interface{}) {
+	m.EmptyInterfaceVariadicParamCalled++
+	m.EmptyInterfaceVariadicParamStub(intf...)
 }
 
 func (m *MyInterfaceMock) ImportedParam(tmpl template.Template) {
@@ -159,6 +182,26 @@ func (m *MyInterfaceMock) InterfaceParam(intf interface{ MyFunc(num int) error }
 func (m *MyInterfaceMock) InterfaceReturn() (intf interface{ MyFunc(num int) error }) {
 	m.InterfaceReturnCalled++
 	return m.InterfaceReturnStub()
+}
+
+func (m *MyInterfaceMock) InterfaceVariadicFuncParam(intf interface{ MyFunc(nums ...int) error }) {
+	m.InterfaceVariadicFuncParamCalled++
+	m.InterfaceVariadicFuncParamStub(intf)
+}
+
+func (m *MyInterfaceMock) InterfaceVariadicFuncReturn() (intf interface{ MyFunc(nums ...int) error }) {
+	m.InterfaceVariadicFuncReturnCalled++
+	return m.InterfaceVariadicFuncReturnStub()
+}
+
+func (m *MyInterfaceMock) InterfaceVariadicFuncVariadicParam(intf ...interface{ MyFunc(nums ...int) error }) {
+	m.InterfaceVariadicFuncVariadicParamCalled++
+	m.InterfaceVariadicFuncVariadicParamStub(intf...)
+}
+
+func (m *MyInterfaceMock) InterfaceVariadicParam(intf ...interface{ MyFunc(num int) error }) {
+	m.InterfaceVariadicParamCalled++
+	m.InterfaceVariadicParamStub(intf...)
 }
 
 func (m *MyInterfaceMock) MultipleUnnamedReturn() (int, error) {

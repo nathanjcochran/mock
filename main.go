@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -18,8 +17,10 @@ import (
 )
 
 func main() {
-	dir := flag.String("d", ".", "Directory to search for interface in")
-	outFile := flag.String("o", "", "Output file (default stdout)")
+	var (
+		dir     = flag.String("d", ".", "Directory to search for interface in")
+		outFile = flag.String("o", "", "Output file (default stdout)")
+	)
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options] interface\n", os.Args[0])
 		fmt.Fprintf(flag.CommandLine.Output(), "Options:\n")
@@ -37,7 +38,7 @@ func main() {
 	// Parse the package and get info about the interface:
 	intf, err := GetInterface(*dir, intfName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error getting interface information: %s", err)
 	}
 
 	// Parse the template:
@@ -78,10 +79,9 @@ func GetInterface(dir, intfName string) (Interface, error) {
 	fset := token.NewFileSet()
 	pkgASTs, err := parser.ParseDir(fset, dir, nil, 0)
 	if err != nil {
-		return Interface{}, fmt.Errorf("Erroring parsing file: %s", err)
+		return Interface{}, fmt.Errorf("erroring parsing directory: %s", err)
 	}
 
-	conf := types.Config{Importer: importer.For("source", nil)}
 	for pkgPath, pkgAST := range pkgASTs {
 		var (
 			files       = []*ast.File{}
@@ -106,10 +106,13 @@ func GetInterface(dir, intfName string) (Interface, error) {
 		}
 
 		// Type-check the package:
-		pkg, err := conf.Check(pkgPath, fset, files, nil)
-		if err != nil {
-			return Interface{}, fmt.Errorf("Type error: %s", err)
+		conf := types.Config{
+			Error: func(err error) {
+				log.Println(err) // Print type errors, but attempt to continue
+			},
+			Importer: importer.For("source", nil),
 		}
+		pkg, _ := conf.Check(pkgPath, fset, files, nil)
 
 		// Find the interface by name:
 		intfObj := pkg.Scope().Lookup(intfName)
@@ -122,7 +125,6 @@ func GetInterface(dir, intfName string) (Interface, error) {
 		if _, ok := intfObj.(*types.TypeName); !ok {
 			return Interface{}, fmt.Errorf("%s is not a named type", intfName)
 		}
-
 		intfType, ok := intfObj.Type().Underlying().(*types.Interface)
 		if !ok {
 			return Interface{}, fmt.Errorf("%s is not an interface", intfName)
@@ -139,9 +141,8 @@ func GetInterface(dir, intfName string) (Interface, error) {
 			methodObj := intfType.Method(i)
 			sig, ok := methodObj.Type().(*types.Signature)
 			if !ok {
-				log.Fatal("Method type is not a signature")
+				return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
 			}
-
 			method := Method{
 				Name: methodObj.Name(),
 			}
@@ -179,7 +180,7 @@ func GetInterface(dir, intfName string) (Interface, error) {
 		return intf, nil
 	}
 
-	return Interface{}, errors.New("Interface not found")
+	return Interface{}, fmt.Errorf("interface not found: %s", intfName)
 }
 
 func Qualify(pkg *types.Package, fileImprts []Import, usedImprts *[]Import) types.Qualifier {

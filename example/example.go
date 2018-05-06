@@ -1,10 +1,14 @@
 package example
 
 import (
+	"fmt"
 	"html/template"
 	. "os"
 	renamed "text/template"
 )
+
+// TODO: chan types
+// TODO: map types
 
 //go:generate mock -o mock.go MyInterface
 type MyInterface interface {
@@ -27,13 +31,23 @@ type MyInterface interface {
 	StructParam(obj struct{ num int })
 	StructVariadicParam(objs ...struct{ num int })
 	EmbeddedStructParam(obj struct{ int })
-	EmbeddedStructVariadicParam(obj ...struct{ int })
+	EmbeddedStructVariadicParam(objs ...struct{ int })
 	EmptyInterfaceParam(intf interface{})
+	EmptyInterfaceVariadicParam(intf ...interface{})
 	InterfaceParam(intf interface {
 		MyFunc(num int) error
 	})
+	InterfaceVariadicParam(intf ...interface {
+		MyFunc(num int) error
+	})
+	InterfaceVariadicFuncParam(intf interface {
+		MyFunc(nums ...int) error
+	})
+	InterfaceVariadicFuncVariadicParam(intf ...interface {
+		MyFunc(nums ...int) error
+	})
 	EmbeddedInterfaceParam(intf interface {
-		MyInterface
+		fmt.Stringer
 	})
 
 	UnnamedReturn() error
@@ -50,7 +64,10 @@ type MyInterface interface {
 	InterfaceReturn() (intf interface {
 		MyFunc(num int) error
 	})
-	//	EmbeddedInterfaceReturn() (intf interface {
-	//		MyInterface
-	//	})
+	InterfaceVariadicFuncReturn() (intf interface {
+		MyFunc(nums ...int) error
+	})
+	EmbeddedInterfaceReturn() (intf interface {
+		fmt.Stringer
+	})
 }
