@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/token"
 	"strings"
 )
 
@@ -9,7 +10,7 @@ type Interface struct {
 	Package string
 	Imports []Import
 	Name    string
-	Methods []Method
+	Methods Methods
 }
 
 type Import struct {
@@ -28,7 +29,15 @@ type Method struct {
 	Name    string
 	Params  Params
 	Results Results
+
+	pos token.Pos
 }
+
+type Methods []Method
+
+func (m Methods) Len() int           { return len(m) }
+func (m Methods) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+func (m Methods) Less(i, j int) bool { return m[i].pos < m[j].pos }
 
 type Param struct {
 	Name     string

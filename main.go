@@ -12,6 +12,7 @@ import (
 	"go/types"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"text/template"
 )
@@ -145,6 +146,7 @@ func GetInterface(dir, intfName string) (Interface, error) {
 			}
 			method := Method{
 				Name: methodObj.Name(),
+				pos:  methodObj.Pos(),
 			}
 
 			// Keep track of each of the method's parameters:
@@ -182,6 +184,7 @@ func GetInterface(dir, intfName string) (Interface, error) {
 
 			intf.Methods = append(intf.Methods, method)
 		}
+		sort.Sort(intf.Methods)
 
 		return intf, nil
 	}
