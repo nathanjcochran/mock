@@ -1,29 +1,31 @@
 package main
 
-var defaultTmpl = `package {{ .PackageName }}
+var defaultTmpl = `package {{ .Package }}
 {{ if gt (len .Imports) 0 }}
 import (
-{{ .ImportsString }}
+	{{- range .Imports }}
+	{{ . }}
+	{{- end }}
 )
 {{- end }}
 
-type {{ .InterfaceName }}Mock struct {
+type {{ .Name }}Mock struct {
 	{{- range .Methods }}
-	{{ .Name }}Stub func({{ .ParamsString }}) {{ .ResultsString }}
+	{{ .Name }}Stub func({{ .Params }}) {{ .Results }}
 	{{ .Name }}Called int
 	{{- end }}
 }
 
-var _ {{ .InterfaceName }} = &{{ .InterfaceName }}Mock{}
+var _ {{ .Name }} = &{{ .Name }}Mock{}
 
 {{- range .Methods }}
 
-func (m *{{ $.InterfaceName }}Mock) {{ .Name }}({{ .NamedParamsString }}) {{ .ResultsString }}{
+func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{
 	m.{{ .Name }}Called ++
 	{{- if gt (len .Results) 0 }}
-	return m.{{ .Name }}Stub({{ .ParamNamesString }})
+	return m.{{ .Name }}Stub({{ .Params.ArgsString }})
 	{{- else }}
-	m.{{ .Name }}Stub({{ .ParamNamesString }})
+	m.{{ .Name }}Stub({{ .Params.ArgsString }})
 	{{- end }}
 }
 {{- end -}}

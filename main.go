@@ -132,8 +132,8 @@ func GetInterface(dir, intfName string) (Interface, error) {
 		fileImprts := fileImports[fset.File(intfObj.Pos()).Pos(0)]
 
 		intf := Interface{
-			PackageName:   pkg.Name(),
-			InterfaceName: intfObj.Name(),
+			Package: pkg.Name(),
+			Name:    intfObj.Name(),
 		}
 		for i := 0; i < intfType.NumMethods(); i++ {
 			methodObj := intfType.Method(i)

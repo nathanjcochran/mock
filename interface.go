@@ -6,16 +6,28 @@ import (
 )
 
 type Interface struct {
-	PackageName   string
-	InterfaceName string
-	Methods       []Method
-	Imports       []Import
+	Package string
+	Imports []Import
+	Name    string
+	Methods []Method
+}
+
+type Import struct {
+	Name string
+	Path string
+}
+
+func (i *Import) String() string {
+	if i.Name != "" {
+		return fmt.Sprintf("%s \"%s\"", i.Name, i.Path)
+	}
+	return fmt.Sprintf("\"%s\"", i.Path)
 }
 
 type Method struct {
 	Name    string
-	Params  []Param
-	Results []Result
+	Params  Params
+	Results Results
 }
 
 type Param struct {
@@ -24,93 +36,82 @@ type Param struct {
 	Variadic bool
 }
 
+func (p *Param) String() string {
+	if p.Name != "" {
+		return fmt.Sprintf("%s %s", p.Name, p.TypeString())
+	}
+	return p.TypeString()
+}
+
+func (p *Param) TypeString() string {
+	if p.Variadic {
+		return fmt.Sprintf("...%s", strings.TrimPrefix(p.Type, "[]"))
+	}
+	return p.Type
+}
+
+type Params []Param
+
+func (ps Params) String() string {
+	var strs []string
+	for _, p := range ps {
+		strs = append(strs, p.String())
+	}
+	return strings.Join(strs, ", ")
+}
+
+func (ps Params) NamedString() string {
+	var strs []string
+	for i, p := range ps {
+		name := p.Name
+		if name == "" || name == "_" {
+			name = fmt.Sprintf("param%d", i+1)
+		}
+
+		strs = append(strs, fmt.Sprintf("%s %s", name, p.TypeString()))
+	}
+	return strings.Join(strs, ", ")
+}
+
+func (ps Params) ArgsString() string {
+	var args []string
+	for i, param := range ps {
+		arg := param.Name
+		if arg == "" || arg == "_" {
+			arg = fmt.Sprintf("param%d", i+1)
+		}
+		if param.Variadic {
+			arg = fmt.Sprintf("%s...", arg)
+		}
+		args = append(args, arg)
+	}
+	return strings.Join(args, ", ")
+}
+
 type Result struct {
 	Name string
 	Type string
 }
 
-type Import struct {
-	Name string
-	Path string
-}
-
-func (i *Interface) ImportsString() string {
-	var strs []string
-	for _, imprt := range i.Imports {
-		var str string
-		if imprt.Name != "" {
-			str = fmt.Sprintf("\t%s \"%s\"", imprt.Name, imprt.Path)
-		} else {
-			str = fmt.Sprintf("\t\"%s\"", imprt.Path)
-		}
-		strs = append(strs, str)
+func (r *Result) String() string {
+	if r.Name != "" {
+		return fmt.Sprintf("%s %s", r.Name, r.Type)
 	}
-	return strings.Join(strs, "\n")
+	return r.Type
 }
 
-func (m *Method) ParamsString() string {
-	var strs []string
-	for _, param := range m.Params {
-		typ := param.Type
-		if param.Variadic {
-			// Remove "[]" and replace with "..."
-			typ = fmt.Sprintf("...%s", strings.TrimPrefix(param.Type, "[]"))
-		}
+type Results []Result
 
-		str := typ
-		if param.Name != "" {
-			str = fmt.Sprintf("%s %s", param.Name, typ)
-		}
-		strs = append(strs, str)
-	}
-	return strings.Join(strs, ", ")
-}
-
-func (m *Method) NamedParamsString() string {
-	var strs []string
-	for i, param := range m.Params {
-		name := param.Name
-		if name == "" || name == "_" {
-			name = fmt.Sprintf("param%d", i+1)
-		}
-
-		typ := param.Type
-		if param.Variadic {
-			// Remove "[]" and replace with "..."
-			typ = fmt.Sprintf("...%s", strings.TrimPrefix(param.Type, "[]"))
-		}
-		strs = append(strs, fmt.Sprintf("%s %s", name, typ))
-	}
-	return strings.Join(strs, ", ")
-}
-
-func (m *Method) ParamNamesString() string {
-	var names []string
-	for i, param := range m.Params {
-		name := param.Name
-		if name == "" || name == "_" {
-			name = fmt.Sprintf("param%d", i+1)
-		}
-		if param.Variadic {
-			name = fmt.Sprintf("%s...", name)
-		}
-		names = append(names, name)
-	}
-	return strings.Join(names, ", ")
-}
-
-func (m *Method) ResultsString() string {
+func (rs Results) String() string {
 	var (
 		strs  []string
 		named bool
 	)
-	for _, result := range m.Results {
-		str := result.Type
-		if result.Name != "" {
+	for _, r := range rs {
+		if r.Name != "" {
 			named = true
-			str = fmt.Sprintf("%s %s", result.Name, result.Type)
 		}
-		strs = append(strs, str)
+		strs = append(strs, r.String())
 	}
 	if len(strs) > 1 || named {
 		return fmt.Sprintf("(%s)", strings.Join(strs, ", "))
