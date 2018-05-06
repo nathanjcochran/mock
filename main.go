@@ -4,17 +4,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"go/ast"
 	"go/format"
-	"go/importer"
-	"go/parser"
-	"go/token"
-	"go/types"
 	"log"
 	"os"
-	"sort"
-	"strings"
 	"text/template"
+
+	"github.com/nathanjcochran/mock/iface"
 )
 
 func main() {
@@ -37,9 +32,9 @@ func main() {
 	intfName := args[0]
 
 	// Parse the package and get info about the interface:
-	intf, err := GetInterface(*dir, intfName)
+	intf, err := iface.GetInterface(*dir, intfName)
 	if err != nil {
-		log.Fatal("Error getting interface information: %s", err)
+		log.Fatalf("Error getting interface information: %s", err)
 	}
 
 	// Parse the template:
@@ -73,172 +68,5 @@ func main() {
 	// Write the formatted output to the file:
 	if _, err := out.Write(result); err != nil {
 		log.Fatalf("Error writing to file: %s", err)
-	}
-}
-
-func GetInterface(dir, intfName string) (Interface, error) {
-	fset := token.NewFileSet()
-	pkgASTs, err := parser.ParseDir(fset, dir, nil, 0)
-	if err != nil {
-		return Interface{}, fmt.Errorf("erroring parsing directory: %s", err)
-	}
-
-	for pkgPath, pkgAST := range pkgASTs {
-		var (
-			files       = []*ast.File{}
-			fileImports = map[token.Pos][]Import{}
-		)
-		for _, file := range pkgAST.Files {
-			files = append(files, file)
-
-			// Keep track of each file's imports, and
-			// their names, if they were renamed:
-			var imprts []Import
-			for _, imp := range file.Imports {
-				imprt := Import{
-					Path: strings.Trim(imp.Path.Value, "\""),
-				}
-				if imp.Name != nil {
-					imprt.Name = imp.Name.Name
-				}
-				imprts = append(imprts, imprt)
-			}
-			fileImports[file.Pos()] = imprts
-		}
-
-		// Type-check the package:
-		conf := types.Config{
-			Error: func(err error) {
-				log.Println(err) // Print type errors, but attempt to continue
-			},
-			Importer: importer.For("source", nil),
-		}
-		pkg, _ := conf.Check(pkgPath, fset, files, nil)
-
-		// Find the interface by name:
-		intfObj := pkg.Scope().Lookup(intfName)
-		if intfObj == nil {
-			continue // Interface not found in this pkg, try next
-		}
-
-		// Validate that the object with that name
-		// is indeed an interface:
-		if _, ok := intfObj.(*types.TypeName); !ok {
-			return Interface{}, fmt.Errorf("%s is not a named type", intfName)
-		}
-		intfType, ok := intfObj.Type().Underlying().(*types.Interface)
-		if !ok {
-			return Interface{}, fmt.Errorf("%s is not an interface", intfName)
-		}
-
-		// Get the file's imports:
-		fileImprts := fileImports[fset.File(intfObj.Pos()).Pos(0)]
-
-		intf := Interface{
-			Package: pkg.Name(),
-			Name:    intfObj.Name(),
-		}
-		for i := 0; i < intfType.NumMethods(); i++ {
-			methodObj := intfType.Method(i)
-			sig, ok := methodObj.Type().(*types.Signature)
-			if !ok {
-				return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
-			}
-			method := Method{
-				Name: methodObj.Name(),
-				pos:  methodObj.Pos(),
-			}
-
-			// Keep track of each of the method's parameters:
-			paramsTuple := sig.Params()
-			for j := 0; j < paramsTuple.Len(); j++ {
-				paramObj := paramsTuple.At(j)
-				// TODO: validate that param types aren't types.Invalid,
-				// so that we can stop printing out all type errors, and
-				// only complain about type errors relevant to the interface
-				param := Param{
-					Name: paramObj.Name(),
-					Type: types.TypeString(paramObj.Type(), Qualify(pkg, fileImprts, &intf.Imports)),
-				}
-				method.Params = append(method.Params, param)
-			}
-
-			// Keep track of whether the last parameter is variadic:
-			if len(method.Params) > 0 && sig.Variadic() {
-				method.Params[len(method.Params)-1].Variadic = true
-			}
-
-			// Keep track of each of the method's results:
-			resultsTuple := sig.Results()
-			for j := 0; j < resultsTuple.Len(); j++ {
-				resultObj := resultsTuple.At(j)
-				// TODO: validate that results types aren't types.Invalid,
-				// so that we can stop printing out all type errors, and
-				// only complain about type errors relevant to the interface
-				result := Result{
-					Name: resultObj.Name(),
-					Type: types.TypeString(resultObj.Type(), Qualify(pkg, fileImprts, &intf.Imports)),
-				}
-				method.Results = append(method.Results, result)
-			}
-
-			intf.Methods = append(intf.Methods, method)
-		}
-		sort.Sort(intf.Methods)
-
-		return intf, nil
-	}
-
-	return Interface{}, fmt.Errorf("interface not found: %s", intfName)
-}
-
-func Qualify(pkg *types.Package, fileImprts []Import, usedImprts *[]Import) types.Qualifier {
-	return func(other *types.Package) string {
-		// If the type is from this package, don't qualify it:
-		if pkg == other {
-			return ""
-		}
-
-		// Search for the import statement for the package
-		// that the type is from:
-		for _, imprt := range fileImprts {
-			if other.Path() == imprt.Path {
-				// If the package was only imported for its
-				// side-effects, skip over it:
-				if imprt.Name == "_" {
-					continue
-				}
-
-				// Keep track of the file imports that have actually
-				// been used in this interface definition (de-duped):
-				var found bool
-				for _, usedImprt := range *usedImprts {
-					if imprt.Path == usedImprt.Path {
-						found = true
-						break
-					}
-				}
-				if !found {
-					*usedImprts = append(*usedImprts, imprt)
-				}
-
-				// If the package was brought into this package
-				// in an unqualified manner, don't qualify it:
-				if imprt.Name == "." {
-					return ""
-				}
-
-				// If the package was renamed in the import
-				// statement, return it's name:
-				if imprt.Name != "" {
-					return imprt.Name
-				}
-
-				// Othewise, the package was not renamed,
-				// so break out and return the package name:
-				break
-			}
-		}
-		return other.Name()
 	}
 }

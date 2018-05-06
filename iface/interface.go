@@ -1,4 +1,4 @@
-package main
+package iface
 
 import (
 	"fmt"
@@ -7,9 +7,9 @@ import (
 )
 
 type Interface struct {
+	Name    string
 	Package string
 	Imports []Import
-	Name    string
 	Methods Methods
 }
 
