@@ -151,6 +151,9 @@ func GetInterface(dir, intfName string) (Interface, error) {
 			paramsTuple := sig.Params()
 			for j := 0; j < paramsTuple.Len(); j++ {
 				paramObj := paramsTuple.At(j)
+				// TODO: validate that param types aren't types.Invalid,
+				// so that we can stop printing out all type errors, and
+				// only complain about type errors relevant to the interface
 				param := Param{
 					Name: paramObj.Name(),
 					Type: types.TypeString(paramObj.Type(), Qualify(pkg, fileImprts, &intf.Imports)),
@@ -167,6 +170,9 @@ func GetInterface(dir, intfName string) (Interface, error) {
 			resultsTuple := sig.Results()
 			for j := 0; j < resultsTuple.Len(); j++ {
 				resultObj := resultsTuple.At(j)
+				// TODO: validate that results types aren't types.Invalid,
+				// so that we can stop printing out all type errors, and
+				// only complain about type errors relevant to the interface
 				result := Result{
 					Name: resultObj.Name(),
 					Type: types.TypeString(resultObj.Type(), Qualify(pkg, fileImprts, &intf.Imports)),
