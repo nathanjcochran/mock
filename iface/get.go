@@ -9,6 +9,8 @@ import (
 	"go/types"
 	"sort"
 	"strings"
+	
+	"golang.org/x/tools/go/ast/astutil"
 )
 
 func GetInterface(dir, ifaceName string) (Interface, error) {
