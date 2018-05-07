@@ -67,9 +67,27 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 			return Interface{}, fmt.Errorf("%s is not an interface", ifaceName)
 		}
 
+		// Get the AST nodes enclosing the interface type name object:
+		fileName := fset.File(ifaceObj.Pos()).Name()
+		ifaceFile, exists := pkgAST.Files[fileName]
+		if !exists {
+			return Interface{}, fmt.Errorf("Could not find file: %s", fileName)
+		}
+		path, _ := astutil.PathEnclosingInterval(ifaceFile, ifaceObj.Pos(), ifaceObj.Pos())
+
+		// Find the interface definition/declaration in the AST:
+		var ifaceDecl *ast.GenDecl
+		for _, node := range path {
+			if ifaceDecl, ok = node.(*ast.GenDecl); ok {
+				break
+			}
+		}
+		if ifaceDecl == nil {
+			return Interface{}, fmt.Errorf("Could not find interface declaration in AST")
+		}
+
 		// If there were type errors, make sure none of them were relevant
 		// to the interface definition, or return the first that was:
-		ifaceScope := ifaceObj.Parent()
 		for _, err := range typeErrs {
 			typErr, ok := err.(types.Error)
 			if !ok {
@@ -77,11 +95,13 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 			}
 
 			// Return the first hard error relevant to the interface:
-			// TODO: Broken - scope is wrong
-			if !typErr.Soft && ifaceScope.Contains(typErr.Pos) {
+			if !typErr.Soft &&
+				typErr.Pos >= ifaceDecl.Pos() &&
+				typErr.Pos <= ifaceDecl.End() {
 				return Interface{}, typErr
 			}
 		}
+
 
 		// Get the file's imports:
 		fileImprts := fileImports[fset.File(ifaceObj.Pos()).Pos(0)]
