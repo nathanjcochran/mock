@@ -29,28 +29,28 @@ func main() {
 	if len(args) < 1 {
 		log.Fatal("Not enough args")
 	}
-	intfName := args[0]
+	ifaceName := args[0]
 
 	// Parse the package and get info about the interface:
-	intf, err := iface.GetInterface(*dir, intfName)
+	iface, err := iface.GetInterface(*dir, ifaceName)
 	if err != nil {
 		log.Fatalf("Error getting interface information: %s", err)
 	}
 
 	// Parse the template:
-	tmpl, err := template.New("default").Parse(defaultTmpl)
+	tmpl, err := template.New("default").Parse(tmpl)
 	if err != nil {
 		log.Fatalf("Error parsing template: %s", err)
 	}
 
 	// Execute/output the template:
 	buf := &bytes.Buffer{}
-	if err := tmpl.Execute(buf, &intf); err != nil {
+	if err := tmpl.Execute(buf, &iface); err != nil {
 		log.Fatalf("Error executing template: %s", err)
 	}
 
 	// Format it with go fmt:
-	result, err := format.Source(buf.Bytes())
+	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
 		log.Fatalf("Error formating output: %s", err)
 	}
@@ -66,7 +66,7 @@ func main() {
 	}
 
 	// Write the formatted output to the file:
-	if _, err := out.Write(result); err != nil {
+	if _, err := out.Write(formatted); err != nil {
 		log.Fatalf("Error writing to file: %s", err)
 	}
 }

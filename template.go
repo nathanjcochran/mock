@@ -1,6 +1,6 @@
 package main
 
-var defaultTmpl = `package {{ .Package }}
+var tmpl = `package {{ .Package }}
 {{ if gt (len .Imports) 0 }}
 import (
 	{{- range .Imports }}
