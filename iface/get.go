@@ -7,7 +7,6 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
-	"log"
 	"sort"
 	"strings"
 )
@@ -16,7 +15,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 	fset := token.NewFileSet()
 	pkgASTs, err := parser.ParseDir(fset, dir, nil, 0)
 	if err != nil {
-		return Interface{}, fmt.Errorf("erroring parsing directory: %s", err)
+		return Interface{}, fmt.Errorf("erroring parsing .go files in directory: %s", err)
 	}
 
 	for pkgPath, pkgAST := range pkgASTs {
@@ -61,11 +60,11 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		// Validate that the object with that name
 		// is indeed an interface:
 		if _, ok := ifaceObj.(*types.TypeName); !ok {
-			return Interface{}, fmt.Errorf("%s is not a named type", ifaceName)
+			return Interface{}, fmt.Errorf("%s is not a named/defined type", ifaceName)
 		}
 		ifaceType, ok := ifaceObj.Type().Underlying().(*types.Interface)
 		if !ok {
-			return Interface{}, fmt.Errorf("%s is not an interface", ifaceName)
+			return Interface{}, fmt.Errorf("%s is not an interface type", ifaceName)
 		}
 
 		// Make sure that none of the types involved in the
@@ -247,7 +246,7 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Underlying(), visited)
 
 	default:
-		log.Printf("Unknown types.Type: %v", t)
+		// log.Printf("Unknown types.Type: %v", t)
 		return true
 	}
 }
