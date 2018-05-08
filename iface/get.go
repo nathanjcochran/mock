@@ -7,10 +7,9 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"log"
 	"sort"
 	"strings"
-	
-	"golang.org/x/tools/go/ast/astutil"
 )
 
 func GetInterface(dir, ifaceName string) (Interface, error) {
@@ -22,25 +21,25 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 
 	for pkgPath, pkgAST := range pkgASTs {
 		var (
-			files       = []*ast.File{}
-			fileImports = map[token.Pos][]Import{}
+			files    = []*ast.File{}
+			fileImps = map[token.Pos][]Import{}
 		)
 		for _, file := range pkgAST.Files {
 			files = append(files, file)
 
 			// Keep track of each file's imports, and
 			// their names, if they were renamed:
-			var imprts []Import
-			for _, imp := range file.Imports {
-				imprt := Import{
-					Path: strings.Trim(imp.Path.Value, "\""),
+			var imps []Import
+			for _, fileImp := range file.Imports {
+				imp := Import{
+					Path: strings.Trim(fileImp.Path.Value, "\""),
 				}
-				if imp.Name != nil {
-					imprt.Name = imp.Name.Name
+				if fileImp.Name != nil {
+					imp.Name = fileImp.Name.Name
 				}
-				imprts = append(imprts, imprt)
+				imps = append(imps, imp)
 			}
-			fileImports[file.Pos()] = imprts
+			fileImps[file.Pos()] = imps
 		}
 
 		// Type-check the package:
@@ -69,44 +68,14 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 			return Interface{}, fmt.Errorf("%s is not an interface", ifaceName)
 		}
 
-		// Get the AST nodes enclosing the interface type name object:
-		fileName := fset.File(ifaceObj.Pos()).Name()
-		ifaceFile, exists := pkgAST.Files[fileName]
-		if !exists {
-			return Interface{}, fmt.Errorf("Could not find file: %s", fileName)
+		// Make sure that none of the types involved in the
+		// interface's definition were invalid/had errors:
+		if !ValidateType(ifaceType) {
+			return Interface{}, &TypeErrors{Errs: typeErrs}
 		}
-		path, _ := astutil.PathEnclosingInterval(ifaceFile, ifaceObj.Pos(), ifaceObj.Pos())
-
-		// Find the interface definition/declaration in the AST:
-		var ifaceDecl *ast.GenDecl
-		for _, node := range path {
-			if ifaceDecl, ok = node.(*ast.GenDecl); ok {
-				break
-			}
-		}
-		if ifaceDecl == nil {
-			return Interface{}, fmt.Errorf("Could not find interface declaration in AST")
-		}
-
-		// If there were type errors, make sure none of them were relevant
-		// to the interface definition, or return the first that was:
-		for _, err := range typeErrs {
-			typErr, ok := err.(types.Error)
-			if !ok {
-				return Interface{}, err
-			}
-
-			// Return the first hard error relevant to the interface:
-			if !typErr.Soft &&
-				typErr.Pos >= ifaceDecl.Pos() &&
-				typErr.Pos <= ifaceDecl.End() {
-				return Interface{}, typErr
-			}
-		}
-
 
 		// Get the file's imports:
-		fileImprts := fileImports[fset.File(ifaceObj.Pos()).Pos(0)]
+		imps := fileImps[fset.File(ifaceObj.Pos()).Pos(0)]
 
 		iface := Interface{
 			Package: pkg.Name(),
@@ -129,7 +98,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				paramObj := paramsTuple.At(j)
 				param := Param{
 					Name: paramObj.Name(),
-					Type: types.TypeString(paramObj.Type(), Qualify(pkg, fileImprts, &iface.Imports)),
+					Type: types.TypeString(paramObj.Type(), Qualify(pkg, imps, &iface.Imports)),
 				}
 				method.Params = append(method.Params, param)
 			}
@@ -145,7 +114,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				resultObj := resultsTuple.At(j)
 				result := Result{
 					Name: resultObj.Name(),
-					Type: types.TypeString(resultObj.Type(), Qualify(pkg, fileImprts, &iface.Imports)),
+					Type: types.TypeString(resultObj.Type(), Qualify(pkg, imps, &iface.Imports)),
 				}
 				method.Results = append(method.Results, result)
 			}
@@ -160,7 +129,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 	return Interface{}, fmt.Errorf("interface not found: %s", ifaceName)
 }
 
-func Qualify(pkg *types.Package, fileImprts []Import, usedImprts *[]Import) types.Qualifier {
+func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualifier {
 	return func(other *types.Package) string {
 		// If the type is from this package, don't qualify it:
 		if pkg == other {
@@ -169,37 +138,37 @@ func Qualify(pkg *types.Package, fileImprts []Import, usedImprts *[]Import) type
 
 		// Search for the import statement for the package
 		// that the type is from:
-		for _, imprt := range fileImprts {
-			if other.Path() == imprt.Path {
+		for _, imp := range imps {
+			if other.Path() == imp.Path {
 				// If the package was only imported for its
 				// side-effects, skip over it:
-				if imprt.Name == "_" {
+				if imp.Name == "_" {
 					continue
 				}
 
 				// Keep track of the file imports that have actually
 				// been used in this interface definition (de-duped):
 				var found bool
-				for _, usedImprt := range *usedImprts {
-					if imprt.Path == usedImprt.Path {
+				for _, usedImprt := range *usedImps {
+					if imp.Path == usedImprt.Path {
 						found = true
 						break
 					}
 				}
 				if !found {
-					*usedImprts = append(*usedImprts, imprt)
+					*usedImps = append(*usedImps, imp)
 				}
 
 				// If the package was brought into this package
 				// in an unqualified manner, don't qualify it:
-				if imprt.Name == "." {
+				if imp.Name == "." {
 					return ""
 				}
 
 				// If the package was renamed in the import
 				// statement, return it's name:
-				if imprt.Name != "" {
-					return imprt.Name
+				if imp.Name != "" {
+					return imp.Name
 				}
 
 				// Othewise, the package was not renamed,
@@ -208,5 +177,77 @@ func Qualify(pkg *types.Package, fileImprts []Import, usedImprts *[]Import) type
 			}
 		}
 		return other.Name()
+	}
+}
+
+func ValidateType(typ types.Type) bool {
+	return validateType(typ, &[]types.Type{})
+}
+
+func validateType(typ types.Type, visited *[]types.Type) bool {
+	for _, t := range *visited {
+		if t == typ {
+			return true
+		}
+	}
+	*visited = append(*visited, typ)
+
+	switch t := typ.(type) {
+	case nil:
+		return true
+
+	case *types.Basic:
+		return t.Kind() != types.Invalid
+
+	case *types.Array:
+		return validateType(t.Elem(), visited)
+
+	case *types.Slice:
+		return validateType(t.Elem(), visited)
+
+	case *types.Struct:
+		for i := 0; i < t.NumFields(); i++ {
+			if !validateType(t.Field(i).Type(), visited) {
+				return false
+			}
+		}
+		return true
+
+	case *types.Pointer:
+		return validateType(t.Elem(), visited)
+
+	case *types.Tuple:
+		for i := 0; i < t.Len(); i++ {
+			if !validateType(t.At(i).Type(), visited) {
+				return false
+			}
+		}
+		return true
+
+	case *types.Signature:
+		return validateType(t.Params(), visited) &&
+			validateType(t.Results(), visited)
+
+	case *types.Interface:
+		for i := 0; i < t.NumMethods(); i++ {
+			if !validateType(t.Method(i).Type(), visited) {
+				return false
+			}
+		}
+		return true
+
+	case *types.Map:
+		return validateType(t.Elem(), visited) &&
+			validateType(t.Key(), visited)
+
+	case *types.Chan:
+		return validateType(t.Elem(), visited)
+
+	case *types.Named:
+		return validateType(t.Underlying(), visited)
+
+	default:
+		log.Printf("Unknown types.Type: %v", t)
+		return true
 	}
 }
