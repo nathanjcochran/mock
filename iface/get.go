@@ -12,13 +12,18 @@ import (
 )
 
 func GetInterface(dir, ifaceName string) (Interface, error) {
+	// Parse the package directory:
 	fset := token.NewFileSet()
 	pkgASTs, err := parser.ParseDir(fset, dir, nil, 0)
 	if err != nil {
 		return Interface{}, fmt.Errorf("erroring parsing .go files in directory: %s", err)
 	}
 
+	// Search through each package for the interface:
+	// TODO: Look in _test packages/files last
 	for pkgPath, pkgAST := range pkgASTs {
+
+		// Gather all of the files in the package for type-checking:
 		var (
 			files    = []*ast.File{}
 			fileImps = map[token.Pos][]Import{}
@@ -26,8 +31,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		for _, file := range pkgAST.Files {
 			files = append(files, file)
 
-			// Keep track of each file's imports, and
-			// their names, if they were renamed:
+			// Keep track of each file's imports:
 			var imps []Import
 			for _, fileImp := range file.Imports {
 				imp := Import{
@@ -41,7 +45,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 			fileImps[file.Pos()] = imps
 		}
 
-		// Type-check the package:
+		// Type-check the package, keeping track of errors:
 		var typeErrs []error
 		conf := types.Config{
 			Error: func(err error) {
@@ -76,22 +80,26 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		// Get the file's imports:
 		imps := fileImps[fset.File(ifaceObj.Pos()).Pos(0)]
 
+		// Begin assembling information about the interface:
 		iface := Interface{
 			Package: pkg.Name(),
 			Name:    ifaceObj.Name(),
 		}
+
+		// Iterate through the interface's methods:
 		for i := 0; i < ifaceType.NumMethods(); i++ {
 			methodObj := ifaceType.Method(i)
-			sig, ok := methodObj.Type().(*types.Signature)
-			if !ok {
-				return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
-			}
 			method := Method{
 				Name: methodObj.Name(),
 				pos:  methodObj.Pos(),
 			}
 
-			// Keep track of each of the method's parameters:
+			sig, ok := methodObj.Type().(*types.Signature)
+			if !ok {
+				return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
+			}
+
+			// Keep track of the names and types of the parameters:
 			paramsTuple := sig.Params()
 			for j := 0; j < paramsTuple.Len(); j++ {
 				paramObj := paramsTuple.At(j)
@@ -102,12 +110,12 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				method.Params = append(method.Params, param)
 			}
 
-			// Keep track of whether the last parameter is variadic:
+			// Mark whether the last parameter is variadic:
 			if len(method.Params) > 0 && sig.Variadic() {
 				method.Params[len(method.Params)-1].Variadic = true
 			}
 
-			// Keep track of each of the method's results:
+			// Keep track of the names and types of the results:
 			resultsTuple := sig.Results()
 			for j := 0; j < resultsTuple.Len(); j++ {
 				resultObj := resultsTuple.At(j)
@@ -120,6 +128,8 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 
 			iface.Methods = append(iface.Methods, method)
 		}
+
+		// Preserve the original ordering of the methods:
 		sort.Sort(iface.Methods)
 
 		return iface, nil
