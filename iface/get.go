@@ -140,6 +140,16 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 
 func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualifier {
 	return func(other *types.Package) string {
+		// This is a bit of a hack. If the type being qualified came from the
+		// vendor folder, then it's path will be the vendored package path, which
+		// cannot be directly compared with the import path. So we truncate the
+		// path up to and including the /vendor/ part. Not sure if this will have
+		// other, unintended side-effects...
+		otherPath := other.Path()
+		if i := strings.Index(otherPath, "/vendor/"); i != -1 {
+			otherPath = otherPath[i+len("/vendor/") : len(otherPath)]
+		}
+
 		// If the type is from this package, don't qualify it:
 		if pkg == other {
 			return ""
@@ -148,7 +158,7 @@ func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualif
 		// Search for the import statement for the package
 		// that the type is from:
 		for _, imp := range imps {
-			if other.Path() == imp.Path {
+			if otherPath == imp.Path {
 				// If the package was only imported for its
 				// side-effects, skip over it:
 				if imp.Name == "_" {
