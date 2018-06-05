@@ -42,7 +42,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				}
 				imps = append(imps, imp)
 			}
-			fileImps[file.Pos()] = imps
+			fileImps[fset.File(file.Pos()).Pos(0)] = imps
 		}
 
 		// Type-check the package, keeping track of errors:
@@ -159,6 +159,7 @@ func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualif
 		// that the type is from:
 		for _, imp := range imps {
 			if otherPath == imp.Path {
+
 				// If the package was only imported for its
 				// side-effects, skip over it:
 				if imp.Name == "_" {
