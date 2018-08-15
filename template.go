@@ -1,18 +1,17 @@
 package main
 
 var tmpl = `package {{ .Package }}
-{{ if gt (len .Imports) 0 }}
 import (
+	"sync/atomic"
 	{{- range .Imports }}
 	{{ . }}
 	{{- end }}
 )
-{{- end }}
 
 type {{ .Name }}Mock struct {
 	{{- range .Methods }}
 	{{ .Name }}Stub func({{ .Params }}) {{ .Results }}
-	{{ .Name }}Called int
+	{{ .Name }}Called int32
 	{{- end }}
 }
 
@@ -21,7 +20,7 @@ var _ {{ .Name }} = &{{ .Name }}Mock{}
 {{- range .Methods }}
 
 func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{
-	m.{{ .Name }}Called ++
+	atomic.AddInt32(&m.{{ .Name }}Called, 1) 
 	{{- if gt (len .Results) 0 }}
 	return m.{{ .Name }}Stub({{ .Params.ArgsString }})
 	{{- else }}
