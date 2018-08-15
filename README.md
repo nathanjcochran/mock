@@ -3,6 +3,8 @@
 `mock` is a code generation tool meant to be used with `go generate`. It
 generates simple mock implementations of interfaces for use in testing.
 
+Mocks are thread-safe.
+
 ## Installation
 
 `go get -u github.com/nathanjcochran/mock`
@@ -42,20 +44,20 @@ package main
 
 type GetterMock struct {
 	GetByIDStub     func(id int) ([]string, error)
-	GetByIDCalled   int
+	GetByIDCalled   int32
 	GetByNameStub   func(name string) ([]string, error)
-	GetByNameCalled int
+	GetByNameCalled int32
 }
 
 var _ Getter = &GetterMock{}
 
 func (m *GetterMock) GetByID(id int) ([]string, error) {
-	m.GetByIDCalled++
+	atomic.AddInt32(m.GetByIDCalled, 1)
 	return m.GetByIDStub(id)
 }
 
 func (m *GetterMock) GetByName(name string) ([]string, error) {
-	m.GetByNameCalled++
+	atomic.AddInt32(m.GetByNameCalled, 1)
 	return m.GetByNameStub(name)
 }
 ```
