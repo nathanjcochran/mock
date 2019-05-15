@@ -2,172 +2,145 @@ package iface
 
 import (
 	"fmt"
-	"go/ast"
-	"go/importer"
-	"go/parser"
 	"go/token"
 	"go/types"
 	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
+	"golang.org/x/tools/go/packages"
 )
 
 func GetInterface(dir, ifaceName string) (Interface, error) {
-	// Parse the package directory:
-	fset := token.NewFileSet()
-	pkgASTs, err := parser.ParseDir(fset, dir, nil, 0)
+	cfg := &packages.Config{Mode: packages.LoadSyntax}
+	pkgs, err := packages.Load(cfg, dir)
 	if err != nil {
-		return Interface{}, fmt.Errorf("erroring parsing .go files in directory: %s", err)
+		return Interface{}, errors.Wrap(err, "error loading package info")
 	}
 
-	// Search through each package for the interface:
-	// TODO: Look in _test packages/files last
-	for pkgPath, pkgAST := range pkgASTs {
+	if len(pkgs) < 1 {
+		return Interface{}, errors.Wrap(err, "failed to find/load package info")
+	} else if len(pkgs) > 1 {
+		return Interface{}, errors.Wrap(err, "found more than one matching package")
+	}
+	pkg := pkgs[0]
 
-		// Gather all of the files in the package for type-checking:
-		var (
-			files    = []*ast.File{}
-			fileImps = map[token.Pos][]Import{}
-		)
-		for _, file := range pkgAST.Files {
-			files = append(files, file)
-
-			// Keep track of each file's imports:
-			var imps []Import
-			for _, fileImp := range file.Imports {
-				imp := Import{
-					Path: strings.Trim(fileImp.Path.Value, "\""),
-				}
-				if fileImp.Name != nil {
-					imp.Name = fileImp.Name.Name
-				}
-				imps = append(imps, imp)
+	// Keep track of each file's imports, along with their name (if renamed)
+	fileImps := map[token.Pos][]Import{}
+	for _, fileAST := range pkg.Syntax {
+		var imps []Import
+		for _, fileImp := range fileAST.Imports {
+			imp := Import{
+				Path: strings.Trim(fileImp.Path.Value, "\""),
 			}
-			fileImps[fset.File(file.Pos()).Pos(0)] = imps
+			if fileImp.Name != nil {
+				imp.Name = fileImp.Name.Name
+			}
+			imps = append(imps, imp)
+		}
+		fileImps[pkg.Fset.File(fileAST.Pos()).Pos(0)] = imps
+	}
+
+	// Find the interface by name
+	ifaceObj := pkg.Types.Scope().Lookup(ifaceName)
+	if ifaceObj == nil {
+		return Interface{}, errors.Errorf("interface not found in package: %s", ifaceName)
+	}
+
+	// Validate that the object with that name
+	// is indeed an interface
+	if _, ok := ifaceObj.(*types.TypeName); !ok {
+		return Interface{}, fmt.Errorf("%s is not a named/defined type", ifaceName)
+	}
+	ifaceType, ok := ifaceObj.Type().Underlying().(*types.Interface)
+	if !ok {
+		return Interface{}, fmt.Errorf("%s is not an interface type", ifaceName)
+	}
+
+	// Make sure that none of the types involved in the
+	// interface's definition were invalid/had errors
+	if !ValidateType(ifaceType) {
+		return Interface{}, &TypeErrors{Errs: pkg.Errors}
+	}
+
+	// Get the file's imports
+	imps := fileImps[pkg.Fset.File(ifaceObj.Pos()).Pos(0)]
+
+	// Begin assembling information about the interface
+	iface := Interface{
+		Package: pkg.Name,
+		Name:    ifaceObj.Name(),
+	}
+
+	// Iterate through the interface's methods
+	for i := 0; i < ifaceType.NumMethods(); i++ {
+		methodObj := ifaceType.Method(i)
+		method := Method{
+			Name: methodObj.Name(),
+			pos:  methodObj.Pos(),
 		}
 
-		// Type-check the package, keeping track of errors:
-		var typeErrs []error
-		conf := types.Config{
-			Error: func(err error) {
-				typeErrs = append(typeErrs, err)
-			},
-			Importer: importer.For("source", nil),
-		}
-		pkg, _ := conf.Check(pkgPath, fset, files, nil)
-
-		// Find the interface by name:
-		ifaceObj := pkg.Scope().Lookup(ifaceName)
-		if ifaceObj == nil {
-			continue // Interface not found in this pkg, try next
-		}
-
-		// Validate that the object with that name
-		// is indeed an interface:
-		if _, ok := ifaceObj.(*types.TypeName); !ok {
-			return Interface{}, fmt.Errorf("%s is not a named/defined type", ifaceName)
-		}
-		ifaceType, ok := ifaceObj.Type().Underlying().(*types.Interface)
+		sig, ok := methodObj.Type().(*types.Signature)
 		if !ok {
-			return Interface{}, fmt.Errorf("%s is not an interface type", ifaceName)
+			return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
 		}
 
-		// Make sure that none of the types involved in the
-		// interface's definition were invalid/had errors:
-		if !ValidateType(ifaceType) {
-			return Interface{}, &TypeErrors{Errs: typeErrs}
+		// Keep track of the names and types of the parameters
+		paramsTuple := sig.Params()
+		for j := 0; j < paramsTuple.Len(); j++ {
+			paramObj := paramsTuple.At(j)
+			param := Param{
+				Name: paramObj.Name(),
+				Type: types.TypeString(paramObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+			}
+			method.Params = append(method.Params, param)
 		}
 
-		// Get the file's imports:
-		imps := fileImps[fset.File(ifaceObj.Pos()).Pos(0)]
-
-		// Begin assembling information about the interface:
-		iface := Interface{
-			Package: pkg.Name(),
-			Name:    ifaceObj.Name(),
+		// Mark whether the last parameter is variadic
+		if len(method.Params) > 0 && sig.Variadic() {
+			method.Params[len(method.Params)-1].Variadic = true
 		}
 
-		// Iterate through the interface's methods:
-		for i := 0; i < ifaceType.NumMethods(); i++ {
-			methodObj := ifaceType.Method(i)
-			method := Method{
-				Name: methodObj.Name(),
-				pos:  methodObj.Pos(),
+		// Keep track of the names and types of the results
+		resultsTuple := sig.Results()
+		for j := 0; j < resultsTuple.Len(); j++ {
+			resultObj := resultsTuple.At(j)
+			result := Result{
+				Name: resultObj.Name(),
+				Type: types.TypeString(resultObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
 			}
-
-			sig, ok := methodObj.Type().(*types.Signature)
-			if !ok {
-				return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
-			}
-
-			// Keep track of the names and types of the parameters:
-			paramsTuple := sig.Params()
-			for j := 0; j < paramsTuple.Len(); j++ {
-				paramObj := paramsTuple.At(j)
-				param := Param{
-					Name: paramObj.Name(),
-					Type: types.TypeString(paramObj.Type(), Qualify(pkg, imps, &iface.Imports)),
-				}
-				method.Params = append(method.Params, param)
-			}
-
-			// Mark whether the last parameter is variadic:
-			if len(method.Params) > 0 && sig.Variadic() {
-				method.Params[len(method.Params)-1].Variadic = true
-			}
-
-			// Keep track of the names and types of the results:
-			resultsTuple := sig.Results()
-			for j := 0; j < resultsTuple.Len(); j++ {
-				resultObj := resultsTuple.At(j)
-				result := Result{
-					Name: resultObj.Name(),
-					Type: types.TypeString(resultObj.Type(), Qualify(pkg, imps, &iface.Imports)),
-				}
-				method.Results = append(method.Results, result)
-			}
-
-			iface.Methods = append(iface.Methods, method)
+			method.Results = append(method.Results, result)
 		}
 
-		// Preserve the original ordering of the methods:
-		sort.Sort(iface.Methods)
-
-		return iface, nil
+		iface.Methods = append(iface.Methods, method)
 	}
 
-	return Interface{}, fmt.Errorf("interface not found: %s", ifaceName)
+	// Preserve the original ordering of the methods
+	sort.Sort(iface.Methods)
+
+	return iface, nil
 }
 
 func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualifier {
 	return func(other *types.Package) string {
-		// This is a bit of a hack. If the type being qualified came from the
-		// vendor folder, then it's path will be the vendored package path, which
-		// cannot be directly compared with the import path. So we truncate the
-		// path up to and including the /vendor/ part. Not sure if this will have
-		// other, unintended side-effects...
-		otherPath := other.Path()
-		if i := strings.Index(otherPath, "/vendor/"); i != -1 {
-			otherPath = otherPath[i+len("/vendor/") : len(otherPath)]
-		}
-
-		// If the type is from this package, don't qualify it:
+		// If the type is from this package, don't qualify it
 		if pkg == other {
 			return ""
 		}
 
 		// Search for the import statement for the package
-		// that the type is from:
+		// that the type is from
 		for _, imp := range imps {
-			if otherPath == imp.Path {
+			if other.Path() == imp.Path {
 
 				// If the package was only imported for its
-				// side-effects, skip over it:
+				// side-effects, skip over it
 				if imp.Name == "_" {
 					continue
 				}
 
 				// Keep track of the file imports that have actually
-				// been used in this interface definition (de-duped):
+				// been used in this interface definition (de-duped)
 				var found bool
 				for _, usedImprt := range *usedImps {
 					if imp.Path == usedImprt.Path {
@@ -180,19 +153,19 @@ func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualif
 				}
 
 				// If the package was brought into this package
-				// in an unqualified manner, don't qualify it:
+				// in an unqualified manner, don't qualify it
 				if imp.Name == "." {
 					return ""
 				}
 
 				// If the package was renamed in the import
-				// statement, return it's name:
+				// statement, return it's name
 				if imp.Name != "" {
 					return imp.Name
 				}
 
 				// Othewise, the package was not renamed,
-				// so break out and return the package name:
+				// so break out and return the package name
 				break
 			}
 		}

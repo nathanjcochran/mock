@@ -3,10 +3,12 @@ package iface
 import (
 	"fmt"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 type TypeErrors struct {
-	Errs []error
+	Errs []packages.Error
 }
 
 func (e *TypeErrors) Error() string {
