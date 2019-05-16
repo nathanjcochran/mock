@@ -169,6 +169,17 @@ func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualif
 				break
 			}
 		}
+
+		// We were unable to find an import statement in the original
+		// file containing the interface that corresponds to the type.
+		// This can happen if, for example, the interface embeds another
+		// type from a different file/package. Add a corresponding import
+		// to the list of used imports.
+		// TODO: Because this is a new import that's not coming from the
+		// original file, it could cause naming conflicts
+		*usedImps = append(*usedImps, Import{
+			Path: other.Path(),
+		})
 		return other.Name()
 	}
 }
