@@ -46,7 +46,7 @@ func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}
 			expected := m.{{ .Name }}Func.Expect[len(m.{{ .Name }}Func.Calls) - 1]
 			{{ range $index, $element := .Params }}
 			if !reflect.DeepEqual(expected.{{ .FieldName $index }}, {{ .Named $index }}){
-				m.T.Errorf("{{ $method.Name }} expected {{ .Named $index }}: %v. Actual: %v", expected.{{ .FieldName $index}}, {{ .Named $index }})
+				m.T.Errorf("{{ $.Name }}.{{ $method.Name }} expected {{ .Named $index }}: %v. Actual: %v", expected.{{ .FieldName $index}}, {{ .Named $index }})
 			}
 			{{ end }}
 		}

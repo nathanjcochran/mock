@@ -50,7 +50,7 @@ func main() {
 	}
 
 	b := buf.Bytes()
-	fmt.Println(string(b))
+	//fmt.Println(string(b))
 
 	// Format it with go imports
 	formatted, err := imports.Process(*outFile, b, nil)
