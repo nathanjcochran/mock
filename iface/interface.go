@@ -45,6 +45,17 @@ type Param struct {
 	Variadic bool
 }
 
+func (p *Param) Named(i int) string {
+	if p.Name == "" || p.Name == "_" {
+		return fmt.Sprintf("param%d", i+1)
+	}
+	return p.Name
+}
+
+func (p *Param) FieldName(i int) string {
+	return strings.Title(p.Named(i))
+}
+
 func (p *Param) String() string {
 	if p.Name != "" {
 		return fmt.Sprintf("%s %s", p.Name, p.TypeString())
@@ -72,29 +83,37 @@ func (ps Params) String() string {
 func (ps Params) NamedString() string {
 	var strs []string
 	for i, p := range ps {
-		name := p.Name
-		if name == "" || name == "_" {
-			name = fmt.Sprintf("param%d", i+1)
-		}
-
-		strs = append(strs, fmt.Sprintf("%s %s", name, p.TypeString()))
+		strs = append(strs, fmt.Sprintf("%s %s", p.Named(i), p.TypeString()))
 	}
 	return strings.Join(strs, ", ")
 }
 
-func (ps Params) ArgsString() string {
+func (ps Params) VariadicArgsString() string {
 	var args []string
-	for i, param := range ps {
-		arg := param.Name
-		if arg == "" || arg == "_" {
-			arg = fmt.Sprintf("param%d", i+1)
-		}
-		if param.Variadic {
+	for i, p := range ps {
+		arg := p.Named(i)
+		if p.Variadic {
 			arg = fmt.Sprintf("%s...", arg)
 		}
 		args = append(args, arg)
 	}
 	return strings.Join(args, ", ")
+}
+
+func (ps Params) ArgsString() string {
+	var args []string
+	for i, p := range ps {
+		args = append(args, p.Named(i))
+	}
+	return strings.Join(args, ", ")
+}
+
+func (ps Params) NamedFields() string {
+	var strs []string
+	for i, p := range ps {
+		strs = append(strs, fmt.Sprintf("\t%s %s", p.FieldName(i), p.Type))
+	}
+	return strings.Join(strs, "\n")
 }
 
 type Result struct {
@@ -107,6 +126,17 @@ func (r *Result) String() string {
 		return fmt.Sprintf("%s %s", r.Name, r.Type)
 	}
 	return r.Type
+}
+
+func (r *Result) Named(i int) string {
+	if r.Name == "" || r.Name == "_" {
+		return fmt.Sprintf("result%d", i+1)
+	}
+	return r.Name
+}
+
+func (r *Result) FieldName(i int) string {
+	return strings.Title(r.Named(i))
 }
 
 type Results []Result
@@ -126,4 +156,20 @@ func (rs Results) String() string {
 		return fmt.Sprintf("(%s)", strings.Join(strs, ", "))
 	}
 	return strings.Join(strs, ", ")
+}
+
+func (rs Results) NamedFields() string {
+	var strs []string
+	for i, r := range rs {
+		strs = append(strs, fmt.Sprintf("\t%s %s", r.FieldName(i), r.Type))
+	}
+	return strings.Join(strs, "\n")
+}
+
+func (rs Results) ReturnList(structName string) string {
+	var strs []string
+	for i, r := range rs {
+		strs = append(strs, fmt.Sprintf("%s.%s", structName, r.FieldName(i)))
+	}
+	return strings.Join(strs, ",")
 }

@@ -49,8 +49,11 @@ func main() {
 		log.Fatalf("Error executing template: %s", err)
 	}
 
+	b := buf.Bytes()
+	fmt.Println(string(b))
+
 	// Format it with go imports
-	formatted, err := imports.Process(*outFile, buf.Bytes(), nil)
+	formatted, err := imports.Process(*outFile, b, nil)
 	if err != nil {
 		log.Fatalf("Error formating output: %s", err)
 	}
