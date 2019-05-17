@@ -3,6 +3,8 @@ package main
 var tmpl = `package {{ .Package }}
 import (
 	"sync"
+	"testing"
+	"github.com/google/go-cmp/cmp"
 	{{- range .Imports }}
 	{{ . }}
 	{{- end }}
@@ -37,24 +39,20 @@ func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}
 
 	m.{{ .Name }}Calls = append(m.{{ .Name }}Calls, {{ $.Name }}{{ .Name }}Args{ {{ .Params.ArgsString }} })
 
-	if m.T != nil && m.{{ .Name }}Expects != nil {
-		if len(m.{{ .Name }}Calls) > len(m.{{ .Name }}Expects) {
-			m.T.Errorf("Unexpected call to {{ $.Name }}.{{ .Name }}. Expected calls: %d. Actual: %d",
-				len(m.{{ .Name }}Expects), len(m.{{ .Name }}Calls))
-		} else {
-			expected := m.{{ .Name }}Expects[len(m.{{ .Name }}Calls) - 1]
-			{{- range $index, $element := .Params }}
-			if !reflect.DeepEqual(expected.{{ .FieldName $index }}, {{ .Named $index }}){
-				m.T.Errorf("{{ $.Name }}.{{ $method.Name }} expected {{ .Named $index }}: %v. Actual: %v", expected.{{ .FieldName $index}}, {{ .Named $index }})
-			}
-			{{- end }}
-		}
-	}
-
 	{{- if gt (len .Results) 0 }}
 	results := m.{{ .Name }}Returns[len(m.{{ .Name }}Calls) - 1]
 	return {{ .Results.ReturnList "results" }}
 	{{- end }}
 }
-{{- end -}}
+{{ end -}}
+
+func (m *{{ $.Name }}Mock) Assert(t *testing.T) {
+	{{- range $method := .Methods }}
+	if m.{{ .Name}}Expects != nil {
+		if diff := cmp.Diff(m.{{ .Name }}Expects, m.{{ .Name }}Calls); diff != "" {
+			t.Errorf("{{ $.Name }}.{{ .Name }} did not receive expected arguments:\n%s", diff)
+		}
+	}
+	{{- end }}
+}
 `
