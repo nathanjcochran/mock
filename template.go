@@ -8,6 +8,8 @@ import (
 	{{- end }}
 )
 
+// {{ .Name }}Mock is a mock implementation of the {{ .Name }}
+// interface.
 type {{ .Name }}Mock struct {
 	{{- range .Methods }}
 	{{ .Name }}Stub func({{ .Params }}) {{ .Results }}
@@ -19,6 +21,8 @@ var _ {{ .Name }} = &{{ .Name }}Mock{}
 
 {{- range .Methods }}
 
+// {{ .Name}} is a stub for the {{ $.Name }}.{{ .Name }}
+// method that records the number of times it has been called.
 func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{
 	atomic.AddInt32(&m.{{ .Name }}Called, 1) 
 	{{- if gt (len .Results) 0 }}

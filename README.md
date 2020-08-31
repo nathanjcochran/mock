@@ -42,6 +42,8 @@ stdout:
 ```go
 package main
 
+// GetterMock is a mock implementation of the {{ .Name }}
+// interface.
 type GetterMock struct {
 	GetByIDStub     func(id int) ([]string, error)
 	GetByIDCalled   int32
@@ -51,11 +53,15 @@ type GetterMock struct {
 
 var _ Getter = &GetterMock{}
 
+// GetByID is a stub for the Getter.GetByID
+// method that records the number of times it has been called.
 func (m *GetterMock) GetByID(id int) ([]string, error) {
 	atomic.AddInt32(m.GetByIDCalled, 1)
 	return m.GetByIDStub(id)
 }
 
+// GetByName is a stub for the Getter.GetByName
+// method that records the number of times it has been called.
 func (m *GetterMock) GetByName(name string) ([]string, error) {
 	atomic.AddInt32(m.GetByNameCalled, 1)
 	return m.GetByNameStub(name)

@@ -10,6 +10,8 @@ import (
 // TODO: chan types
 // TODO: map types
 
+// MyInterface is a sample interface with a large number of
+// methods of different signatures.
 //go:generate mock -o mock.go MyInterface
 type MyInterface interface {
 	NoParamsOrReturn()
