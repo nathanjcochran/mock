@@ -8,7 +8,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/nathanjcochran/mock/iface"
+	"github.com/nicheinc/mock/iface"
 	"golang.org/x/tools/imports"
 )
 

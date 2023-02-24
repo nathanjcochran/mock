@@ -1,6 +1,6 @@
-module github.com/nathanjcochran/mock
+module github.com/nicheinc/mock
 
-go 1.12
+go 1.20
 
 require (
 	github.com/pkg/errors v0.8.1
