@@ -72,53 +72,82 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		Name:    ifaceObj.Name(),
 	}
 
-	// Iterate through the interface's methods
-	for i := 0; i < ifaceType.NumMethods(); i++ {
-		methodObj := ifaceType.Method(i)
-		method := Method{
-			Name: methodObj.Name(),
-			Pos:  methodObj.Pos(),
-		}
-
-		sig, ok := methodObj.Type().(*types.Signature)
-		if !ok {
-			return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
-		}
-
-		// Keep track of the names and types of the parameters
-		paramsTuple := sig.Params()
-		for j := 0; j < paramsTuple.Len(); j++ {
-			paramObj := paramsTuple.At(j)
-			param := Param{
-				Name: paramObj.Name(),
-				Type: types.TypeString(paramObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+	// Iterate through each embedded interface's explicit methods
+	for _, ifaceType := range explodeInterface(ifaceType) {
+		for i := 0; i < ifaceType.NumExplicitMethods(); i++ {
+			methodObj := ifaceType.ExplicitMethod(i)
+			method := Method{
+				Name:            methodObj.Name(),
+				SourceInterface: ifaceType.String(),
+				pos:             methodObj.Pos(),
 			}
-			method.Params = append(method.Params, param)
-		}
 
-		// Mark whether the last parameter is variadic
-		if len(method.Params) > 0 && sig.Variadic() {
-			method.Params[len(method.Params)-1].Variadic = true
-		}
-
-		// Keep track of the names and types of the results
-		resultsTuple := sig.Results()
-		for j := 0; j < resultsTuple.Len(); j++ {
-			resultObj := resultsTuple.At(j)
-			result := Result{
-				Name: resultObj.Name(),
-				Type: types.TypeString(resultObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+			sig, ok := methodObj.Type().(*types.Signature)
+			if !ok {
+				return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
 			}
-			method.Results = append(method.Results, result)
-		}
 
-		iface.Methods = append(iface.Methods, method)
+			// Keep track of the names and types of the parameters
+			paramsTuple := sig.Params()
+			for j := 0; j < paramsTuple.Len(); j++ {
+				paramObj := paramsTuple.At(j)
+				param := Param{
+					Name: paramObj.Name(),
+					Type: types.TypeString(paramObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+				}
+				method.Params = append(method.Params, param)
+			}
+
+			// Mark whether the last parameter is variadic
+			if len(method.Params) > 0 && sig.Variadic() {
+				method.Params[len(method.Params)-1].Variadic = true
+			}
+
+			// Keep track of the names and types of the results
+			resultsTuple := sig.Results()
+			for j := 0; j < resultsTuple.Len(); j++ {
+				resultObj := resultsTuple.At(j)
+				result := Result{
+					Name: resultObj.Name(),
+					Type: types.TypeString(resultObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+				}
+				method.Results = append(method.Results, result)
+			}
+
+			iface.Methods = append(iface.Methods, method)
+		}
 	}
 
 	// Preserve the original ordering of the methods
 	sort.Sort(iface.Methods)
 
 	return iface, nil
+}
+
+// explodeInterface traverses an interface type, returning the original
+// interface along with all transitively embedded interfaces.
+func explodeInterface(iface *types.Interface) []*types.Interface {
+	var (
+		result    []*types.Interface
+		workQueue = []*types.Interface{iface}
+		visited   = map[string]bool{}
+	)
+	for len(workQueue) > 0 {
+		current := workQueue[0]
+		workQueue = workQueue[1:]
+		currentID := current.String()
+		if !visited[currentID] {
+			visited[currentID] = true
+			result = append(result, current)
+			for i := 0; i < current.NumEmbeddeds(); i++ {
+				switch embeddedIface := current.EmbeddedType(i).(type) {
+				case *types.Interface:
+					workQueue = append(workQueue, embeddedIface)
+				}
+			}
+		}
+	}
+	return result
 }
 
 func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualifier {

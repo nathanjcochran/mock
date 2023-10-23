@@ -23,7 +23,7 @@ var _ {{ .Name }} = &{{ .Name }}Mock{}
 
 // {{ .Name}} is a stub for the {{ $.Name }}.{{ .Name }}
 // method that records the number of times it has been called.
-func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{ // {{ .Pos }}
+func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{ // {{ .SourceInterface }}
 	atomic.AddInt32(&m.{{ .Name }}Called, 1) 
 	{{- if gt (len .Results) 0 }}
 	return m.{{ .Name }}Stub({{ .Params.ArgsString }})

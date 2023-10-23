@@ -31,7 +31,9 @@ type Method struct {
 	Params  Params
 	Results Results
 
-	Pos token.Pos
+	// String representation of the interface explicitly requiring this method
+	SourceInterface string
+	pos             token.Pos
 }
 
 type Methods []Method
@@ -39,17 +41,16 @@ type Methods []Method
 func (m Methods) Len() int      { return len(m) }
 func (m Methods) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
 func (m Methods) Less(i, j int) bool {
-	switch cmp.Compare(m[i].Pos, m[j].Pos) {
+	// Group methods by source interface. This grouping matters when the mocked
+	// interface comprises interfaces defined in multiple files, in which case
+	// the token positions alone don't have a stable ordering.
+	switch cmp.Compare(m[i].SourceInterface, m[j].SourceInterface) {
 	case -1: // less
 		return true
 	case 1: // greater
 		return false
 	default: // equal
-		// This can happen when the mocked interface embeds one or more
-		// interfaces defined in other files. In that case, two different
-		// methods may have the same source position. Break any such ties using
-		// the method names.
-		return m[i].Name < m[j].Name
+		return m[i].pos < m[j].pos
 	}
 }
 
