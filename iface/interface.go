@@ -1,6 +1,7 @@
 package iface
 
 import (
+	"cmp"
 	"fmt"
 	"go/token"
 	"strings"
@@ -30,7 +31,7 @@ type Method struct {
 	Params  Params
 	Results Results
 
-	pos token.Pos
+	Pos token.Pos
 }
 
 type Methods []Method

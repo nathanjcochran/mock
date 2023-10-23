@@ -77,7 +77,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		methodObj := ifaceType.Method(i)
 		method := Method{
 			Name: methodObj.Name(),
-			pos:  methodObj.Pos(),
+			Pos:  methodObj.Pos(),
 		}
 
 		sig, ok := methodObj.Type().(*types.Signature)
