@@ -142,7 +142,10 @@ func explodeInterface(iface *types.Interface) []*types.Interface {
 			for i := 0; i < current.NumEmbeddeds(); i++ {
 				switch embeddedIface := current.EmbeddedType(i).(type) {
 				case *types.Interface:
+					fmt.Printf("Found embedded interface %T\n", embeddedIface)
 					workQueue = append(workQueue, embeddedIface)
+				default:
+					fmt.Printf("Found embedded non-interface type %T\n", embeddedIface)
 				}
 			}
 		}
