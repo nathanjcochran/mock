@@ -77,9 +77,9 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		for i := 0; i < ifaceType.NumExplicitMethods(); i++ {
 			methodObj := ifaceType.ExplicitMethod(i)
 			method := Method{
-				Name:            methodObj.Name(),
-				SourceInterface: ifaceType.String(),
-				pos:             methodObj.Pos(),
+				Name:     methodObj.Name(),
+				srcIface: ifaceType.String(),
+				pos:      methodObj.Pos(),
 			}
 
 			sig, ok := methodObj.Type().(*types.Signature)
@@ -142,18 +142,12 @@ func explodeInterface(iface *types.Interface) []*types.Interface {
 			for i := 0; i < current.NumEmbeddeds(); i++ {
 				switch embedded := current.EmbeddedType(i).(type) {
 				case *types.Interface:
-					fmt.Printf("Found embedded interface %T\n", embedded)
 					workQueue = append(workQueue, embedded)
 				case *types.Named:
 					switch underlying := embedded.Underlying().(type) {
 					case *types.Interface:
-						fmt.Printf("Found named embedded interface %T\n", underlying)
 						workQueue = append(workQueue, underlying)
-					default:
-						fmt.Printf("Found non-interface named embedded type %T\n", underlying)
 					}
-				default:
-					fmt.Printf("Found embedded non-interface type %T\n", embedded)
 				}
 			}
 		}

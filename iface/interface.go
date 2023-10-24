@@ -32,8 +32,8 @@ type Method struct {
 	Results Results
 
 	// String representation of the interface explicitly requiring this method
-	SourceInterface string
-	pos             token.Pos
+	srcIface string
+	pos      token.Pos
 }
 
 type Methods []Method
@@ -44,7 +44,7 @@ func (m Methods) Less(i, j int) bool {
 	// Group methods by source interface. This grouping matters when the mocked
 	// interface comprises interfaces defined in multiple files, in which case
 	// the token positions alone don't have a stable ordering.
-	switch cmp.Compare(m[i].SourceInterface, m[j].SourceInterface) {
+	switch cmp.Compare(m[i].srcIface, m[j].srcIface) {
 	case -1: // less
 		return true
 	case 1: // greater
