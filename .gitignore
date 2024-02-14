@@ -25,3 +25,6 @@ _testmain.go
 
 # Vim swap files
 *.swp
+
+# Vendored files
+/vendor
