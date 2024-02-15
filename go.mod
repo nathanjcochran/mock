@@ -3,6 +3,8 @@ module github.com/nicheinc/mock
 go 1.21
 
 require (
-	github.com/pkg/errors v0.8.1
-	golang.org/x/tools v0.0.0-20190516015132-d1a3278ee749
+	github.com/pkg/errors v0.9.1
+	golang.org/x/tools v0.18.0
 )
+
+require golang.org/x/mod v0.15.0 // indirect
