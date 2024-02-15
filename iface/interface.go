@@ -1,6 +1,7 @@
 package iface
 
 import (
+	"cmp"
 	"fmt"
 	"go/token"
 	"strings"
@@ -30,14 +31,28 @@ type Method struct {
 	Params  Params
 	Results Results
 
-	pos token.Pos
+	// String representation of the interface explicitly requiring this method
+	srcIface string
+	pos      token.Pos
 }
 
 type Methods []Method
 
-func (m Methods) Len() int           { return len(m) }
-func (m Methods) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
-func (m Methods) Less(i, j int) bool { return m[i].pos < m[j].pos }
+func (m Methods) Len() int      { return len(m) }
+func (m Methods) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
+func (m Methods) Less(i, j int) bool {
+	// Group methods by source interface. This grouping matters when the mocked
+	// interface comprises interfaces defined in multiple files, in which case
+	// the token positions alone don't have a stable ordering.
+	switch cmp.Compare(m[i].srcIface, m[j].srcIface) {
+	case -1: // less
+		return true
+	case 1: // greater
+		return false
+	default: // equal
+		return m[i].pos < m[j].pos
+	}
+}
 
 type Param struct {
 	Name     string
