@@ -11,6 +11,7 @@ import (
 // {{ .Name }}Mock is a mock implementation of the {{ .Name }}
 // interface.
 type {{ .Name }}Mock struct {
+	t *testing.T
 	{{- range .Methods }}
 	{{ .Name }}Stub func({{ .Params }}) {{ .Results }}
 	{{ .Name }}Called int32
@@ -28,6 +29,12 @@ func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}
 	{{- if gt (len .Results) 0 }}
 	return m.{{ .Name }}Stub({{ .Params.ArgsString }})
 	{{- else }}
+	if m.{{ .Name }}Stub == nil {
+		if m.t != nil {
+			m.t.Error("{{ .Name }}Stub is nil")
+		}
+		panic("{{ .Name }} unimplemented")
+	}
 	m.{{ .Name }}Stub({{ .Params.ArgsString }})
 	{{- end }}
 }
