@@ -11,7 +11,7 @@ import (
 // {{ .Name }}Mock is a mock implementation of the {{ .Name }}
 // interface.
 type {{ .Name }}Mock struct {
-	t *testing.T
+	T *testing.T
 	{{- range .Methods }}
 	{{ .Name }}Stub func({{ .Params }}) {{ .Results }}
 	{{ .Name }}Called int32
@@ -27,8 +27,8 @@ var _ {{ .Name }} = &{{ .Name }}Mock{}
 func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{
 	atomic.AddInt32(&m.{{ .Name }}Called, 1) 
 	if m.{{ .Name }}Stub == nil {
-		if m.t != nil {
-			m.t.Error("{{ .Name }}Stub is nil")
+		if m.T != nil {
+			m.T.Error("{{ .Name }}Stub is nil")
 		}
 		panic("{{ .Name }} unimplemented")
 	}
