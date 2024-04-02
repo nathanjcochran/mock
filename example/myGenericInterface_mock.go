@@ -2,6 +2,7 @@ package example
 
 import (
 	"sync/atomic"
+	"testing"
 
 	"github.com/nicheinc/mock/example/internal"
 )
@@ -9,22 +10,35 @@ import (
 // MyGenericInterfaceMock is a mock implementation of the MyGenericInterface
 // interface.
 type MyGenericInterfaceMock[T interface{ byte | internal.Internal }, U any] struct {
-	TStub   func() T
-	TCalled int32
-	UStub   func() U
-	UCalled int32
+	T          *testing.T
+	GetTStub   func() T
+	GetTCalled int32
+	GetUStub   func() U
+	GetUCalled int32
 }
 
-// T is a stub for the MyGenericInterface.T
+// GetT is a stub for the MyGenericInterface.GetT
 // method that records the number of times it has been called.
-func (m *MyGenericInterfaceMock[T, U]) T() T {
-	atomic.AddInt32(&m.TCalled, 1)
-	return m.TStub()
+func (m *MyGenericInterfaceMock[T, U]) GetT() T {
+	atomic.AddInt32(&m.GetTCalled, 1)
+	if m.GetTStub == nil {
+		if m.T != nil {
+			m.T.Error("GetTStub is nil")
+		}
+		panic("GetT unimplemented")
+	}
+	return m.GetTStub()
 }
 
-// U is a stub for the MyGenericInterface.U
+// GetU is a stub for the MyGenericInterface.GetU
 // method that records the number of times it has been called.
-func (m *MyGenericInterfaceMock[T, U]) U() U {
-	atomic.AddInt32(&m.UCalled, 1)
-	return m.UStub()
+func (m *MyGenericInterfaceMock[T, U]) GetU() U {
+	atomic.AddInt32(&m.GetUCalled, 1)
+	if m.GetUStub == nil {
+		if m.T != nil {
+			m.T.Error("GetUStub is nil")
+		}
+		panic("GetU unimplemented")
+	}
+	return m.GetUStub()
 }

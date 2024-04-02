@@ -7,6 +7,6 @@ import "github.com/nicheinc/mock/example/internal"
 //
 //go:generate mock -o myGenericInterface_mock.go MyGenericInterface
 type MyGenericInterface[T interface{ byte | internal.Internal }, U any] interface {
-	T() T
-	U() U
+	GetT() T
+	GetU() U
 }

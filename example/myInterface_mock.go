@@ -5,6 +5,7 @@ import (
 	"html/template"
 	. "os"
 	"sync/atomic"
+	"testing"
 	renamed "text/template"
 
 	"github.com/nicheinc/mock/example/internal"
@@ -13,6 +14,7 @@ import (
 // MyInterfaceMock is a mock implementation of the MyInterface
 // interface.
 type MyInterfaceMock struct {
+	T                                        *testing.T
 	NoParamsOrReturnStub                     func()
 	NoParamsOrReturnCalled                   int32
 	UnnamedParamStub                         func(string)
@@ -105,6 +107,12 @@ var _ MyInterface = &MyInterfaceMock{}
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) NoParamsOrReturn() {
 	atomic.AddInt32(&m.NoParamsOrReturnCalled, 1)
+	if m.NoParamsOrReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("NoParamsOrReturnStub is nil")
+		}
+		panic("NoParamsOrReturn unimplemented")
+	}
 	m.NoParamsOrReturnStub()
 }
 
@@ -112,6 +120,12 @@ func (m *MyInterfaceMock) NoParamsOrReturn() {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) UnnamedParam(param1 string) {
 	atomic.AddInt32(&m.UnnamedParamCalled, 1)
+	if m.UnnamedParamStub == nil {
+		if m.T != nil {
+			m.T.Error("UnnamedParamStub is nil")
+		}
+		panic("UnnamedParam unimplemented")
+	}
 	m.UnnamedParamStub(param1)
 }
 
@@ -119,6 +133,12 @@ func (m *MyInterfaceMock) UnnamedParam(param1 string) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) UnnamedVariadicParam(param1 ...string) {
 	atomic.AddInt32(&m.UnnamedVariadicParamCalled, 1)
+	if m.UnnamedVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("UnnamedVariadicParamStub is nil")
+		}
+		panic("UnnamedVariadicParam unimplemented")
+	}
 	m.UnnamedVariadicParamStub(param1...)
 }
 
@@ -126,6 +146,12 @@ func (m *MyInterfaceMock) UnnamedVariadicParam(param1 ...string) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) BlankParam(param1 string) {
 	atomic.AddInt32(&m.BlankParamCalled, 1)
+	if m.BlankParamStub == nil {
+		if m.T != nil {
+			m.T.Error("BlankParamStub is nil")
+		}
+		panic("BlankParam unimplemented")
+	}
 	m.BlankParamStub(param1)
 }
 
@@ -133,6 +159,12 @@ func (m *MyInterfaceMock) BlankParam(param1 string) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) BlankVariadicParam(param1 ...string) {
 	atomic.AddInt32(&m.BlankVariadicParamCalled, 1)
+	if m.BlankVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("BlankVariadicParamStub is nil")
+		}
+		panic("BlankVariadicParam unimplemented")
+	}
 	m.BlankVariadicParamStub(param1...)
 }
 
@@ -140,6 +172,12 @@ func (m *MyInterfaceMock) BlankVariadicParam(param1 ...string) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) NamedParam(str string) {
 	atomic.AddInt32(&m.NamedParamCalled, 1)
+	if m.NamedParamStub == nil {
+		if m.T != nil {
+			m.T.Error("NamedParamStub is nil")
+		}
+		panic("NamedParam unimplemented")
+	}
 	m.NamedParamStub(str)
 }
 
@@ -147,6 +185,12 @@ func (m *MyInterfaceMock) NamedParam(str string) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) NamedVariadicParam(strs ...string) {
 	atomic.AddInt32(&m.NamedVariadicParamCalled, 1)
+	if m.NamedVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("NamedVariadicParamStub is nil")
+		}
+		panic("NamedVariadicParam unimplemented")
+	}
 	m.NamedVariadicParamStub(strs...)
 }
 
@@ -154,6 +198,12 @@ func (m *MyInterfaceMock) NamedVariadicParam(strs ...string) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) SameTypeNamedParams(str1 string, str2 string) {
 	atomic.AddInt32(&m.SameTypeNamedParamsCalled, 1)
+	if m.SameTypeNamedParamsStub == nil {
+		if m.T != nil {
+			m.T.Error("SameTypeNamedParamsStub is nil")
+		}
+		panic("SameTypeNamedParams unimplemented")
+	}
 	m.SameTypeNamedParamsStub(str1, str2)
 }
 
@@ -161,6 +211,12 @@ func (m *MyInterfaceMock) SameTypeNamedParams(str1 string, str2 string) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) InternalTypeParam(internal internal.Internal) {
 	atomic.AddInt32(&m.InternalTypeParamCalled, 1)
+	if m.InternalTypeParamStub == nil {
+		if m.T != nil {
+			m.T.Error("InternalTypeParamStub is nil")
+		}
+		panic("InternalTypeParam unimplemented")
+	}
 	m.InternalTypeParamStub(internal)
 }
 
@@ -168,6 +224,12 @@ func (m *MyInterfaceMock) InternalTypeParam(internal internal.Internal) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) ImportedParam(tmpl template.Template) {
 	atomic.AddInt32(&m.ImportedParamCalled, 1)
+	if m.ImportedParamStub == nil {
+		if m.T != nil {
+			m.T.Error("ImportedParamStub is nil")
+		}
+		panic("ImportedParam unimplemented")
+	}
 	m.ImportedParamStub(tmpl)
 }
 
@@ -175,6 +237,12 @@ func (m *MyInterfaceMock) ImportedParam(tmpl template.Template) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) ImportedVariadicParam(tmpl ...template.Template) {
 	atomic.AddInt32(&m.ImportedVariadicParamCalled, 1)
+	if m.ImportedVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("ImportedVariadicParamStub is nil")
+		}
+		panic("ImportedVariadicParam unimplemented")
+	}
 	m.ImportedVariadicParamStub(tmpl...)
 }
 
@@ -182,6 +250,12 @@ func (m *MyInterfaceMock) ImportedVariadicParam(tmpl ...template.Template) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) RenamedImportParam(tmpl renamed.Template) {
 	atomic.AddInt32(&m.RenamedImportParamCalled, 1)
+	if m.RenamedImportParamStub == nil {
+		if m.T != nil {
+			m.T.Error("RenamedImportParamStub is nil")
+		}
+		panic("RenamedImportParam unimplemented")
+	}
 	m.RenamedImportParamStub(tmpl)
 }
 
@@ -189,6 +263,12 @@ func (m *MyInterfaceMock) RenamedImportParam(tmpl renamed.Template) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) RenamedImportVariadicParam(tmpls ...renamed.Template) {
 	atomic.AddInt32(&m.RenamedImportVariadicParamCalled, 1)
+	if m.RenamedImportVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("RenamedImportVariadicParamStub is nil")
+		}
+		panic("RenamedImportVariadicParam unimplemented")
+	}
 	m.RenamedImportVariadicParamStub(tmpls...)
 }
 
@@ -196,6 +276,12 @@ func (m *MyInterfaceMock) RenamedImportVariadicParam(tmpls ...renamed.Template) 
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) DotImportParam(file File) {
 	atomic.AddInt32(&m.DotImportParamCalled, 1)
+	if m.DotImportParamStub == nil {
+		if m.T != nil {
+			m.T.Error("DotImportParamStub is nil")
+		}
+		panic("DotImportParam unimplemented")
+	}
 	m.DotImportParamStub(file)
 }
 
@@ -203,6 +289,12 @@ func (m *MyInterfaceMock) DotImportParam(file File) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) DotImportVariadicParam(files ...File) {
 	atomic.AddInt32(&m.DotImportVariadicParamCalled, 1)
+	if m.DotImportVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("DotImportVariadicParamStub is nil")
+		}
+		panic("DotImportVariadicParam unimplemented")
+	}
 	m.DotImportVariadicParamStub(files...)
 }
 
@@ -210,6 +302,12 @@ func (m *MyInterfaceMock) DotImportVariadicParam(files ...File) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) SelfReferentialParam(intf MyInterface) {
 	atomic.AddInt32(&m.SelfReferentialParamCalled, 1)
+	if m.SelfReferentialParamStub == nil {
+		if m.T != nil {
+			m.T.Error("SelfReferentialParamStub is nil")
+		}
+		panic("SelfReferentialParam unimplemented")
+	}
 	m.SelfReferentialParamStub(intf)
 }
 
@@ -217,6 +315,12 @@ func (m *MyInterfaceMock) SelfReferentialParam(intf MyInterface) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) SelfReferentialVariadicParam(intf ...MyInterface) {
 	atomic.AddInt32(&m.SelfReferentialVariadicParamCalled, 1)
+	if m.SelfReferentialVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("SelfReferentialVariadicParamStub is nil")
+		}
+		panic("SelfReferentialVariadicParam unimplemented")
+	}
 	m.SelfReferentialVariadicParamStub(intf...)
 }
 
@@ -224,6 +328,12 @@ func (m *MyInterfaceMock) SelfReferentialVariadicParam(intf ...MyInterface) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) StructParam(obj struct{ num int }) {
 	atomic.AddInt32(&m.StructParamCalled, 1)
+	if m.StructParamStub == nil {
+		if m.T != nil {
+			m.T.Error("StructParamStub is nil")
+		}
+		panic("StructParam unimplemented")
+	}
 	m.StructParamStub(obj)
 }
 
@@ -231,6 +341,12 @@ func (m *MyInterfaceMock) StructParam(obj struct{ num int }) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) StructVariadicParam(objs ...struct{ num int }) {
 	atomic.AddInt32(&m.StructVariadicParamCalled, 1)
+	if m.StructVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("StructVariadicParamStub is nil")
+		}
+		panic("StructVariadicParam unimplemented")
+	}
 	m.StructVariadicParamStub(objs...)
 }
 
@@ -238,6 +354,12 @@ func (m *MyInterfaceMock) StructVariadicParam(objs ...struct{ num int }) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmbeddedStructParam(obj struct{ int }) {
 	atomic.AddInt32(&m.EmbeddedStructParamCalled, 1)
+	if m.EmbeddedStructParamStub == nil {
+		if m.T != nil {
+			m.T.Error("EmbeddedStructParamStub is nil")
+		}
+		panic("EmbeddedStructParam unimplemented")
+	}
 	m.EmbeddedStructParamStub(obj)
 }
 
@@ -245,6 +367,12 @@ func (m *MyInterfaceMock) EmbeddedStructParam(obj struct{ int }) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmbeddedStructVariadicParam(objs ...struct{ int }) {
 	atomic.AddInt32(&m.EmbeddedStructVariadicParamCalled, 1)
+	if m.EmbeddedStructVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("EmbeddedStructVariadicParamStub is nil")
+		}
+		panic("EmbeddedStructVariadicParam unimplemented")
+	}
 	m.EmbeddedStructVariadicParamStub(objs...)
 }
 
@@ -252,6 +380,12 @@ func (m *MyInterfaceMock) EmbeddedStructVariadicParam(objs ...struct{ int }) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmptyInterfaceParam(intf interface{}) {
 	atomic.AddInt32(&m.EmptyInterfaceParamCalled, 1)
+	if m.EmptyInterfaceParamStub == nil {
+		if m.T != nil {
+			m.T.Error("EmptyInterfaceParamStub is nil")
+		}
+		panic("EmptyInterfaceParam unimplemented")
+	}
 	m.EmptyInterfaceParamStub(intf)
 }
 
@@ -259,6 +393,12 @@ func (m *MyInterfaceMock) EmptyInterfaceParam(intf interface{}) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmptyInterfaceVariadicParam(intf ...interface{}) {
 	atomic.AddInt32(&m.EmptyInterfaceVariadicParamCalled, 1)
+	if m.EmptyInterfaceVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("EmptyInterfaceVariadicParamStub is nil")
+		}
+		panic("EmptyInterfaceVariadicParam unimplemented")
+	}
 	m.EmptyInterfaceVariadicParamStub(intf...)
 }
 
@@ -266,6 +406,12 @@ func (m *MyInterfaceMock) EmptyInterfaceVariadicParam(intf ...interface{}) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) InterfaceParam(intf interface{ MyFunc(num int) error }) {
 	atomic.AddInt32(&m.InterfaceParamCalled, 1)
+	if m.InterfaceParamStub == nil {
+		if m.T != nil {
+			m.T.Error("InterfaceParamStub is nil")
+		}
+		panic("InterfaceParam unimplemented")
+	}
 	m.InterfaceParamStub(intf)
 }
 
@@ -273,6 +419,12 @@ func (m *MyInterfaceMock) InterfaceParam(intf interface{ MyFunc(num int) error }
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) InterfaceVariadicParam(intf ...interface{ MyFunc(num int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicParamCalled, 1)
+	if m.InterfaceVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("InterfaceVariadicParamStub is nil")
+		}
+		panic("InterfaceVariadicParam unimplemented")
+	}
 	m.InterfaceVariadicParamStub(intf...)
 }
 
@@ -280,6 +432,12 @@ func (m *MyInterfaceMock) InterfaceVariadicParam(intf ...interface{ MyFunc(num i
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) InterfaceVariadicFuncParam(intf interface{ MyFunc(nums ...int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicFuncParamCalled, 1)
+	if m.InterfaceVariadicFuncParamStub == nil {
+		if m.T != nil {
+			m.T.Error("InterfaceVariadicFuncParamStub is nil")
+		}
+		panic("InterfaceVariadicFuncParam unimplemented")
+	}
 	m.InterfaceVariadicFuncParamStub(intf)
 }
 
@@ -287,6 +445,12 @@ func (m *MyInterfaceMock) InterfaceVariadicFuncParam(intf interface{ MyFunc(nums
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) InterfaceVariadicFuncVariadicParam(intf ...interface{ MyFunc(nums ...int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicFuncVariadicParamCalled, 1)
+	if m.InterfaceVariadicFuncVariadicParamStub == nil {
+		if m.T != nil {
+			m.T.Error("InterfaceVariadicFuncVariadicParamStub is nil")
+		}
+		panic("InterfaceVariadicFuncVariadicParam unimplemented")
+	}
 	m.InterfaceVariadicFuncVariadicParamStub(intf...)
 }
 
@@ -294,6 +458,12 @@ func (m *MyInterfaceMock) InterfaceVariadicFuncVariadicParam(intf ...interface{ 
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmbeddedInterfaceParam(intf interface{ fmt.Stringer }) {
 	atomic.AddInt32(&m.EmbeddedInterfaceParamCalled, 1)
+	if m.EmbeddedInterfaceParamStub == nil {
+		if m.T != nil {
+			m.T.Error("EmbeddedInterfaceParamStub is nil")
+		}
+		panic("EmbeddedInterfaceParam unimplemented")
+	}
 	m.EmbeddedInterfaceParamStub(intf)
 }
 
@@ -301,6 +471,12 @@ func (m *MyInterfaceMock) EmbeddedInterfaceParam(intf interface{ fmt.Stringer })
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) UnnamedReturn() error {
 	atomic.AddInt32(&m.UnnamedReturnCalled, 1)
+	if m.UnnamedReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("UnnamedReturnStub is nil")
+		}
+		panic("UnnamedReturn unimplemented")
+	}
 	return m.UnnamedReturnStub()
 }
 
@@ -308,6 +484,12 @@ func (m *MyInterfaceMock) UnnamedReturn() error {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) MultipleUnnamedReturn() (int, error) {
 	atomic.AddInt32(&m.MultipleUnnamedReturnCalled, 1)
+	if m.MultipleUnnamedReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("MultipleUnnamedReturnStub is nil")
+		}
+		panic("MultipleUnnamedReturn unimplemented")
+	}
 	return m.MultipleUnnamedReturnStub()
 }
 
@@ -315,6 +497,12 @@ func (m *MyInterfaceMock) MultipleUnnamedReturn() (int, error) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) BlankReturn() (_ error) {
 	atomic.AddInt32(&m.BlankReturnCalled, 1)
+	if m.BlankReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("BlankReturnStub is nil")
+		}
+		panic("BlankReturn unimplemented")
+	}
 	return m.BlankReturnStub()
 }
 
@@ -322,6 +510,12 @@ func (m *MyInterfaceMock) BlankReturn() (_ error) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) NamedReturn() (err error) {
 	atomic.AddInt32(&m.NamedReturnCalled, 1)
+	if m.NamedReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("NamedReturnStub is nil")
+		}
+		panic("NamedReturn unimplemented")
+	}
 	return m.NamedReturnStub()
 }
 
@@ -329,6 +523,12 @@ func (m *MyInterfaceMock) NamedReturn() (err error) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) SameTypeNamedReturn() (err1 error, err2 error) {
 	atomic.AddInt32(&m.SameTypeNamedReturnCalled, 1)
+	if m.SameTypeNamedReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("SameTypeNamedReturnStub is nil")
+		}
+		panic("SameTypeNamedReturn unimplemented")
+	}
 	return m.SameTypeNamedReturnStub()
 }
 
@@ -336,6 +536,12 @@ func (m *MyInterfaceMock) SameTypeNamedReturn() (err1 error, err2 error) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) RenamedImportReturn() (tmpl renamed.Template) {
 	atomic.AddInt32(&m.RenamedImportReturnCalled, 1)
+	if m.RenamedImportReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("RenamedImportReturnStub is nil")
+		}
+		panic("RenamedImportReturn unimplemented")
+	}
 	return m.RenamedImportReturnStub()
 }
 
@@ -343,6 +549,12 @@ func (m *MyInterfaceMock) RenamedImportReturn() (tmpl renamed.Template) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) DotImportReturn() (file File) {
 	atomic.AddInt32(&m.DotImportReturnCalled, 1)
+	if m.DotImportReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("DotImportReturnStub is nil")
+		}
+		panic("DotImportReturn unimplemented")
+	}
 	return m.DotImportReturnStub()
 }
 
@@ -350,6 +562,12 @@ func (m *MyInterfaceMock) DotImportReturn() (file File) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) SelfReferentialReturn() (intf MyInterface) {
 	atomic.AddInt32(&m.SelfReferentialReturnCalled, 1)
+	if m.SelfReferentialReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("SelfReferentialReturnStub is nil")
+		}
+		panic("SelfReferentialReturn unimplemented")
+	}
 	return m.SelfReferentialReturnStub()
 }
 
@@ -357,6 +575,12 @@ func (m *MyInterfaceMock) SelfReferentialReturn() (intf MyInterface) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) StructReturn() (obj struct{ num int }) {
 	atomic.AddInt32(&m.StructReturnCalled, 1)
+	if m.StructReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("StructReturnStub is nil")
+		}
+		panic("StructReturn unimplemented")
+	}
 	return m.StructReturnStub()
 }
 
@@ -364,6 +588,12 @@ func (m *MyInterfaceMock) StructReturn() (obj struct{ num int }) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmbeddedStructReturn() (obj struct{ int }) {
 	atomic.AddInt32(&m.EmbeddedStructReturnCalled, 1)
+	if m.EmbeddedStructReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("EmbeddedStructReturnStub is nil")
+		}
+		panic("EmbeddedStructReturn unimplemented")
+	}
 	return m.EmbeddedStructReturnStub()
 }
 
@@ -371,6 +601,12 @@ func (m *MyInterfaceMock) EmbeddedStructReturn() (obj struct{ int }) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmptyInterfaceReturn() (intf interface{}) {
 	atomic.AddInt32(&m.EmptyInterfaceReturnCalled, 1)
+	if m.EmptyInterfaceReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("EmptyInterfaceReturnStub is nil")
+		}
+		panic("EmptyInterfaceReturn unimplemented")
+	}
 	return m.EmptyInterfaceReturnStub()
 }
 
@@ -378,6 +614,12 @@ func (m *MyInterfaceMock) EmptyInterfaceReturn() (intf interface{}) {
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) InterfaceReturn() (intf interface{ MyFunc(num int) error }) {
 	atomic.AddInt32(&m.InterfaceReturnCalled, 1)
+	if m.InterfaceReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("InterfaceReturnStub is nil")
+		}
+		panic("InterfaceReturn unimplemented")
+	}
 	return m.InterfaceReturnStub()
 }
 
@@ -385,6 +627,12 @@ func (m *MyInterfaceMock) InterfaceReturn() (intf interface{ MyFunc(num int) err
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) InterfaceVariadicFuncReturn() (intf interface{ MyFunc(nums ...int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicFuncReturnCalled, 1)
+	if m.InterfaceVariadicFuncReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("InterfaceVariadicFuncReturnStub is nil")
+		}
+		panic("InterfaceVariadicFuncReturn unimplemented")
+	}
 	return m.InterfaceVariadicFuncReturnStub()
 }
 
@@ -392,5 +640,11 @@ func (m *MyInterfaceMock) InterfaceVariadicFuncReturn() (intf interface{ MyFunc(
 // method that records the number of times it has been called.
 func (m *MyInterfaceMock) EmbeddedInterfaceReturn() (intf interface{ fmt.Stringer }) {
 	atomic.AddInt32(&m.EmbeddedInterfaceReturnCalled, 1)
+	if m.EmbeddedInterfaceReturnStub == nil {
+		if m.T != nil {
+			m.T.Error("EmbeddedInterfaceReturnStub is nil")
+		}
+		panic("EmbeddedInterfaceReturn unimplemented")
+	}
 	return m.EmbeddedInterfaceReturnStub()
 }
