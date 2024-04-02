@@ -8,10 +8,46 @@ import (
 )
 
 type Interface struct {
-	Name    string
-	Package string
-	Imports []Import
-	Methods Methods
+	Name       string
+	TypeParams TypeParams
+	Package    string
+	Imports    []Import
+	Methods    Methods
+}
+
+type TypeParam struct {
+	Name       string
+	Constraint string
+}
+
+func (t TypeParam) String() string {
+	return fmt.Sprintf("%s %s", t.Name, t.Constraint)
+}
+
+type TypeParams []TypeParam
+
+func (t TypeParams) mapString(f func(TypeParam) string) string {
+	if len(t) == 0 {
+		return ""
+	}
+	var s strings.Builder
+	s.WriteByte('[')
+	for i, typeParam := range t {
+		if i > 0 {
+			s.WriteString(", ")
+		}
+		s.WriteString(f(typeParam))
+	}
+	s.WriteByte(']')
+	return s.String()
+}
+
+func (t TypeParams) String() string {
+	return t.mapString(TypeParam.String)
+}
+
+func (t TypeParams) Names() string {
+	return t.mapString(func(t TypeParam) string { return t.Name })
 }
 
 type Import struct {

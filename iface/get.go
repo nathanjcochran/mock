@@ -71,6 +71,19 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		Package: pkg.Name,
 		Name:    ifaceObj.Name(),
 	}
+	qualifier := Qualify(pkg.Types, imps, &iface.Imports)
+
+	// Record type parameter list info.
+	if ifaceNamed, ok := ifaceObj.Type().(*types.Named); ok {
+		typeParams := ifaceNamed.TypeParams()
+		for i := range typeParams.Len() {
+			typeParam := typeParams.At(i)
+			iface.TypeParams = append(iface.TypeParams, TypeParam{
+				Name:       typeParam.Obj().Name(),
+				Constraint: types.TypeString(typeParam.Constraint(), qualifier),
+			})
+		}
+	}
 
 	// Iterate through each embedded interface's explicit methods
 	for _, ifaceType := range explodeInterface(ifaceType) {
@@ -93,7 +106,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				paramObj := paramsTuple.At(j)
 				param := Param{
 					Name: paramObj.Name(),
-					Type: types.TypeString(paramObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+					Type: types.TypeString(paramObj.Type(), qualifier),
 				}
 				method.Params = append(method.Params, param)
 			}
@@ -109,7 +122,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				resultObj := resultsTuple.At(j)
 				result := Result{
 					Name: resultObj.Name(),
-					Type: types.TypeString(resultObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+					Type: types.TypeString(resultObj.Type(), qualifier),
 				}
 				method.Results = append(method.Results, result)
 			}

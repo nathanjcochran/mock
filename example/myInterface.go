@@ -5,6 +5,8 @@ import (
 	"html/template"
 	. "os"
 	renamed "text/template"
+
+	"github.com/nicheinc/mock/example/internal"
 )
 
 // TODO: chan types
@@ -12,7 +14,8 @@ import (
 
 // MyInterface is a sample interface with a large number of
 // methods of different signatures.
-//go:generate mock -o mock.go MyInterface
+//
+//go:generate mock -o myInterface_mock.go MyInterface
 type MyInterface interface {
 	NoParamsOrReturn()
 	UnnamedParam(string)
@@ -22,6 +25,7 @@ type MyInterface interface {
 	NamedParam(str string)
 	NamedVariadicParam(strs ...string)
 	SameTypeNamedParams(str1, str2 string)
+	InternalTypeParam(internal internal.Internal)
 	ImportedParam(tmpl template.Template)
 	ImportedVariadicParam(tmpl ...template.Template)
 	RenamedImportParam(tmpl renamed.Template)

@@ -6,6 +6,8 @@ import (
 	. "os"
 	"sync/atomic"
 	renamed "text/template"
+
+	"github.com/nicheinc/mock/example/internal"
 )
 
 // MyInterfaceMock is a mock implementation of the MyInterface
@@ -27,6 +29,8 @@ type MyInterfaceMock struct {
 	NamedVariadicParamCalled                 int32
 	SameTypeNamedParamsStub                  func(str1 string, str2 string)
 	SameTypeNamedParamsCalled                int32
+	InternalTypeParamStub                    func(internal internal.Internal)
+	InternalTypeParamCalled                  int32
 	ImportedParamStub                        func(tmpl template.Template)
 	ImportedParamCalled                      int32
 	ImportedVariadicParamStub                func(tmpl ...template.Template)
@@ -151,6 +155,13 @@ func (m *MyInterfaceMock) NamedVariadicParam(strs ...string) {
 func (m *MyInterfaceMock) SameTypeNamedParams(str1 string, str2 string) {
 	atomic.AddInt32(&m.SameTypeNamedParamsCalled, 1)
 	m.SameTypeNamedParamsStub(str1, str2)
+}
+
+// InternalTypeParam is a stub for the MyInterface.InternalTypeParam
+// method that records the number of times it has been called.
+func (m *MyInterfaceMock) InternalTypeParam(internal internal.Internal) {
+	atomic.AddInt32(&m.InternalTypeParamCalled, 1)
+	m.InternalTypeParamStub(internal)
 }
 
 // ImportedParam is a stub for the MyInterface.ImportedParam
