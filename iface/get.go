@@ -59,7 +59,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 
 	// Make sure that none of the types involved in the
 	// interface's definition were invalid/had errors
-	if !ValidateType(ifaceType) {
+	if !ValidateType(ifaceObj.Type()) {
 		return Interface{}, &TypeErrors{Errs: pkg.Errors}
 	}
 
@@ -295,6 +295,10 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Named:
+		typeParams := t.TypeParams()
+		for i := range typeParams.Len() {
+			validateType(typeParams.At(i).Constraint(), visited)
+		}
 		return validateType(t.Underlying(), visited)
 
 	default:
