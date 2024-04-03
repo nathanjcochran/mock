@@ -101,6 +101,7 @@ type MyInterfaceMock struct {
 	EmbeddedInterfaceReturnCalled            int32
 }
 
+// Verify that *MyInterfaceMock implements MyInterface.
 var _ MyInterface = &MyInterfaceMock{}
 
 // NoParamsOrReturn is a stub for the MyInterface.NoParamsOrReturn

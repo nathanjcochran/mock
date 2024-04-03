@@ -17,6 +17,11 @@ type MyGenericInterfaceMock[T interface{ byte | internal.Internal }, U any] stru
 	GetUCalled int32
 }
 
+// Verify that *MyGenericInterfaceMock implements MyGenericInterface.
+func _[T interface{ byte | internal.Internal }, U any]() {
+	var _ MyGenericInterface[T, U] = &MyGenericInterfaceMock[T, U]{}
+}
+
 // GetT is a stub for the MyGenericInterface.GetT
 // method that records the number of times it has been called.
 func (m *MyGenericInterfaceMock[T, U]) GetT() T {

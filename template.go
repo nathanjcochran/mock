@@ -18,7 +18,12 @@ type {{ .Name }}Mock{{ .TypeParams }} struct {
 	{{- end }}
 }
 
-{{ if not .TypeParams }}
+// Verify that *{{ .Name }}Mock implements {{ .Name }}.
+{{- if .TypeParams }}
+func _{{ .TypeParams }}() {
+    var _ {{ .Name }}{{ .TypeParams.Names }} = &{{ .Name }}Mock{{ .TypeParams.Names }}{}
+}
+{{ else }}
 var _ {{ .Name }} = &{{ .Name }}Mock{}
 {{ end }}
 
