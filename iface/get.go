@@ -87,7 +87,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 
 	// Iterate through each embedded interface's explicit methods
 	for _, ifaceType := range explodeInterface(ifaceType) {
-		for i := 0; i < ifaceType.NumExplicitMethods(); i++ {
+		for i := range ifaceType.NumExplicitMethods() {
 			methodObj := ifaceType.ExplicitMethod(i)
 			method := Method{
 				Name:     methodObj.Name(),
@@ -152,7 +152,7 @@ func explodeInterface(iface *types.Interface) []*types.Interface {
 		if !visited[currentID] {
 			visited[currentID] = true
 			result = append(result, current)
-			for i := 0; i < current.NumEmbeddeds(); i++ {
+			for i := range current.NumEmbeddeds() {
 				switch embedded := current.EmbeddedType(i).(type) {
 				case *types.Interface:
 					workQueue = append(workQueue, embedded)
@@ -257,7 +257,7 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Struct:
-		for i := 0; i < t.NumFields(); i++ {
+		for i := range t.NumFields() {
 			if !validateType(t.Field(i).Type(), visited) {
 				return false
 			}
@@ -268,7 +268,7 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Tuple:
-		for i := 0; i < t.Len(); i++ {
+		for i := range t.Len() {
 			if !validateType(t.At(i).Type(), visited) {
 				return false
 			}
@@ -280,8 +280,21 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 			validateType(t.Results(), visited)
 
 	case *types.Interface:
-		for i := 0; i < t.NumMethods(); i++ {
+		for i := range t.NumEmbeddeds() {
+			if !validateType(t.EmbeddedType(i), visited) {
+				return false
+			}
+		}
+		for i := range t.NumMethods() {
 			if !validateType(t.Method(i).Type(), visited) {
+				return false
+			}
+		}
+		return true
+
+	case *types.Union:
+		for i := range t.Len() {
+			if !validateType(t.Term(i).Type(), visited) {
 				return false
 			}
 		}
@@ -297,7 +310,9 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 	case *types.Named:
 		typeParams := t.TypeParams()
 		for i := range typeParams.Len() {
-			validateType(typeParams.At(i).Constraint(), visited)
+			if !validateType(typeParams.At(i).Constraint(), visited) {
+				return false
+			}
 		}
 		return validateType(t.Underlying(), visited)
 
