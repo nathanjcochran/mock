@@ -10,7 +10,7 @@ import (
 
 // {{ .Name }}Mock is a mock implementation of the {{ .Name }}
 // interface.
-type {{ .Name }}Mock struct {
+type {{ .Name }}Mock{{ .TypeParams }} struct {
 	T *testing.T
 	{{- range .Methods }}
 	{{ .Name }}Stub func({{ .Params }}) {{ .Results }}
@@ -18,13 +18,20 @@ type {{ .Name }}Mock struct {
 	{{- end }}
 }
 
+// Verify that *{{ .Name }}Mock implements {{ .Name }}.
+{{- if .TypeParams }}
+func _{{ .TypeParams }}() {
+    var _ {{ .Name }}{{ .TypeParams.Names }} = &{{ .Name }}Mock{{ .TypeParams.Names }}{}
+}
+{{ else }}
 var _ {{ .Name }} = &{{ .Name }}Mock{}
+{{ end }}
 
 {{- range .Methods }}
 
 // {{ .Name}} is a stub for the {{ $.Name }}.{{ .Name }}
 // method that records the number of times it has been called.
-func (m *{{ $.Name }}Mock) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{
+func (m *{{ $.Name }}Mock{{ $.TypeParams.Names }}) {{ .Name }}({{ .Params.NamedString }}) {{ .Results }}{
 	atomic.AddInt32(&m.{{ .Name }}Called, 1) 
 	if m.{{ .Name }}Stub == nil {
 		if m.T != nil {

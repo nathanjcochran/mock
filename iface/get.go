@@ -59,7 +59,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 
 	// Make sure that none of the types involved in the
 	// interface's definition were invalid/had errors
-	if !ValidateType(ifaceType) {
+	if !ValidateType(ifaceObj.Type()) {
 		return Interface{}, &TypeErrors{Errs: pkg.Errors}
 	}
 
@@ -71,10 +71,23 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		Package: pkg.Name,
 		Name:    ifaceObj.Name(),
 	}
+	qualifier := Qualify(pkg.Types, imps, &iface.Imports)
+
+	// Record type parameter list info.
+	if ifaceNamed, ok := ifaceObj.Type().(*types.Named); ok {
+		typeParams := ifaceNamed.TypeParams()
+		for i := range typeParams.Len() {
+			typeParam := typeParams.At(i)
+			iface.TypeParams = append(iface.TypeParams, TypeParam{
+				Name:       typeParam.Obj().Name(),
+				Constraint: types.TypeString(typeParam.Constraint(), qualifier),
+			})
+		}
+	}
 
 	// Iterate through each embedded interface's explicit methods
 	for _, ifaceType := range explodeInterface(ifaceType) {
-		for i := 0; i < ifaceType.NumExplicitMethods(); i++ {
+		for i := range ifaceType.NumExplicitMethods() {
 			methodObj := ifaceType.ExplicitMethod(i)
 			method := Method{
 				Name:     methodObj.Name(),
@@ -93,7 +106,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				paramObj := paramsTuple.At(j)
 				param := Param{
 					Name: paramObj.Name(),
-					Type: types.TypeString(paramObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+					Type: types.TypeString(paramObj.Type(), qualifier),
 				}
 				method.Params = append(method.Params, param)
 			}
@@ -109,7 +122,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 				resultObj := resultsTuple.At(j)
 				result := Result{
 					Name: resultObj.Name(),
-					Type: types.TypeString(resultObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+					Type: types.TypeString(resultObj.Type(), qualifier),
 				}
 				method.Results = append(method.Results, result)
 			}
@@ -139,7 +152,7 @@ func explodeInterface(iface *types.Interface) []*types.Interface {
 		if !visited[currentID] {
 			visited[currentID] = true
 			result = append(result, current)
-			for i := 0; i < current.NumEmbeddeds(); i++ {
+			for i := range current.NumEmbeddeds() {
 				switch embedded := current.EmbeddedType(i).(type) {
 				case *types.Interface:
 					workQueue = append(workQueue, embedded)
@@ -244,7 +257,7 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Struct:
-		for i := 0; i < t.NumFields(); i++ {
+		for i := range t.NumFields() {
 			if !validateType(t.Field(i).Type(), visited) {
 				return false
 			}
@@ -255,7 +268,7 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Tuple:
-		for i := 0; i < t.Len(); i++ {
+		for i := range t.Len() {
 			if !validateType(t.At(i).Type(), visited) {
 				return false
 			}
@@ -267,8 +280,21 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 			validateType(t.Results(), visited)
 
 	case *types.Interface:
-		for i := 0; i < t.NumMethods(); i++ {
+		for i := range t.NumEmbeddeds() {
+			if !validateType(t.EmbeddedType(i), visited) {
+				return false
+			}
+		}
+		for i := range t.NumMethods() {
 			if !validateType(t.Method(i).Type(), visited) {
+				return false
+			}
+		}
+		return true
+
+	case *types.Union:
+		for i := range t.Len() {
+			if !validateType(t.Term(i).Type(), visited) {
 				return false
 			}
 		}
@@ -282,6 +308,12 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Named:
+		typeParams := t.TypeParams()
+		for i := range typeParams.Len() {
+			if !validateType(typeParams.At(i).Constraint(), visited) {
+				return false
+			}
+		}
 		return validateType(t.Underlying(), visited)
 
 	default:
