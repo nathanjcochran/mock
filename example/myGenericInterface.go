@@ -1,6 +1,6 @@
 package example
 
-import "github.com/nicheinc/mock/example/internal"
+import "github.com/nathanjcochran/mock/example/internal"
 
 // MyGenericInterface is a sample generic interface with a complex type
 // parameter list.

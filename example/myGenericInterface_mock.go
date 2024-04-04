@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/nicheinc/mock/example/internal"
+	"github.com/nathanjcochran/mock/example/internal"
 )
 
 // MyGenericInterfaceMock is a mock implementation of the MyGenericInterface

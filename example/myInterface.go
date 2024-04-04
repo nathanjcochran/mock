@@ -6,7 +6,7 @@ import (
 	. "os"
 	renamed "text/template"
 
-	"github.com/nicheinc/mock/example/internal"
+	"github.com/nathanjcochran/mock/example/internal"
 )
 
 // TODO: chan types

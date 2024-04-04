@@ -8,7 +8,7 @@ import (
 	"testing"
 	renamed "text/template"
 
-	"github.com/nicheinc/mock/example/internal"
+	"github.com/nathanjcochran/mock/example/internal"
 )
 
 // MyInterfaceMock is a mock implementation of the MyInterface
