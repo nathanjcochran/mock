@@ -12,11 +12,11 @@ import (
 // TODO: chan types
 // TODO: map types
 
-// MyInterface is a sample interface with a large number of
+// Example is an example interface with a large number of
 // methods of different signatures.
 //
-//go:generate mock -o myInterface_mock.go MyInterface
-type MyInterface interface {
+//go:generate mock -o example_mock.go Example
+type Example interface {
 	NoParamsOrReturn()
 	UnnamedParam(string)
 	UnnamedVariadicParam(...string)
@@ -32,8 +32,8 @@ type MyInterface interface {
 	RenamedImportVariadicParam(tmpls ...renamed.Template)
 	DotImportParam(file File)
 	DotImportVariadicParam(files ...File)
-	SelfReferentialParam(intf MyInterface)
-	SelfReferentialVariadicParam(intf ...MyInterface)
+	SelfReferentialParam(intf Example)
+	SelfReferentialVariadicParam(intf ...Example)
 	StructParam(obj struct{ num int })
 	StructVariadicParam(objs ...struct{ num int })
 	EmbeddedStructParam(obj struct{ int })
@@ -63,7 +63,7 @@ type MyInterface interface {
 	SameTypeNamedReturn() (err1, err2 error)
 	RenamedImportReturn() (tmpl renamed.Template)
 	DotImportReturn() (file File)
-	SelfReferentialReturn() (intf MyInterface)
+	SelfReferentialReturn() (intf Example)
 	StructReturn() (obj struct{ num int })
 	EmbeddedStructReturn() (obj struct{ int })
 	EmptyInterfaceReturn() (intf interface{})

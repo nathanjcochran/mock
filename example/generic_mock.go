@@ -7,9 +7,9 @@ import (
 	"github.com/nathanjcochran/mock/example/internal"
 )
 
-// MyGenericInterfaceMock is a mock implementation of the MyGenericInterface
+// GenericMock is a mock implementation of the Generic
 // interface.
-type MyGenericInterfaceMock[T interface{ byte | internal.Internal }, U any] struct {
+type GenericMock[T interface{ byte | internal.Internal }, U any] struct {
 	T          *testing.T
 	GetTStub   func() T
 	GetTCalled int32
@@ -17,14 +17,14 @@ type MyGenericInterfaceMock[T interface{ byte | internal.Internal }, U any] stru
 	GetUCalled int32
 }
 
-// Verify that *MyGenericInterfaceMock implements MyGenericInterface.
+// Verify that *GenericMock implements Generic.
 func _[T interface{ byte | internal.Internal }, U any]() {
-	var _ MyGenericInterface[T, U] = &MyGenericInterfaceMock[T, U]{}
+	var _ Generic[T, U] = &GenericMock[T, U]{}
 }
 
-// GetT is a stub for the MyGenericInterface.GetT
+// GetT is a stub for the Generic.GetT
 // method that records the number of times it has been called.
-func (m *MyGenericInterfaceMock[T, U]) GetT() T {
+func (m *GenericMock[T, U]) GetT() T {
 	atomic.AddInt32(&m.GetTCalled, 1)
 	if m.GetTStub == nil {
 		if m.T != nil {
@@ -35,9 +35,9 @@ func (m *MyGenericInterfaceMock[T, U]) GetT() T {
 	return m.GetTStub()
 }
 
-// GetU is a stub for the MyGenericInterface.GetU
+// GetU is a stub for the Generic.GetU
 // method that records the number of times it has been called.
-func (m *MyGenericInterfaceMock[T, U]) GetU() U {
+func (m *GenericMock[T, U]) GetU() U {
 	atomic.AddInt32(&m.GetUCalled, 1)
 	if m.GetUStub == nil {
 		if m.T != nil {

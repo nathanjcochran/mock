@@ -11,9 +11,9 @@ import (
 	"github.com/nathanjcochran/mock/example/internal"
 )
 
-// MyInterfaceMock is a mock implementation of the MyInterface
+// ExampleMock is a mock implementation of the Example
 // interface.
-type MyInterfaceMock struct {
+type ExampleMock struct {
 	T                                        *testing.T
 	NoParamsOrReturnStub                     func()
 	NoParamsOrReturnCalled                   int32
@@ -45,9 +45,9 @@ type MyInterfaceMock struct {
 	DotImportParamCalled                     int32
 	DotImportVariadicParamStub               func(files ...File)
 	DotImportVariadicParamCalled             int32
-	SelfReferentialParamStub                 func(intf MyInterface)
+	SelfReferentialParamStub                 func(intf Example)
 	SelfReferentialParamCalled               int32
-	SelfReferentialVariadicParamStub         func(intf ...MyInterface)
+	SelfReferentialVariadicParamStub         func(intf ...Example)
 	SelfReferentialVariadicParamCalled       int32
 	StructParamStub                          func(obj struct{ num int })
 	StructParamCalled                        int32
@@ -85,7 +85,7 @@ type MyInterfaceMock struct {
 	RenamedImportReturnCalled                int32
 	DotImportReturnStub                      func() (file File)
 	DotImportReturnCalled                    int32
-	SelfReferentialReturnStub                func() (intf MyInterface)
+	SelfReferentialReturnStub                func() (intf Example)
 	SelfReferentialReturnCalled              int32
 	StructReturnStub                         func() (obj struct{ num int })
 	StructReturnCalled                       int32
@@ -101,12 +101,12 @@ type MyInterfaceMock struct {
 	EmbeddedInterfaceReturnCalled            int32
 }
 
-// Verify that *MyInterfaceMock implements MyInterface.
-var _ MyInterface = &MyInterfaceMock{}
+// Verify that *ExampleMock implements Example.
+var _ Example = &ExampleMock{}
 
-// NoParamsOrReturn is a stub for the MyInterface.NoParamsOrReturn
+// NoParamsOrReturn is a stub for the Example.NoParamsOrReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) NoParamsOrReturn() {
+func (m *ExampleMock) NoParamsOrReturn() {
 	atomic.AddInt32(&m.NoParamsOrReturnCalled, 1)
 	if m.NoParamsOrReturnStub == nil {
 		if m.T != nil {
@@ -117,9 +117,9 @@ func (m *MyInterfaceMock) NoParamsOrReturn() {
 	m.NoParamsOrReturnStub()
 }
 
-// UnnamedParam is a stub for the MyInterface.UnnamedParam
+// UnnamedParam is a stub for the Example.UnnamedParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) UnnamedParam(param1 string) {
+func (m *ExampleMock) UnnamedParam(param1 string) {
 	atomic.AddInt32(&m.UnnamedParamCalled, 1)
 	if m.UnnamedParamStub == nil {
 		if m.T != nil {
@@ -130,9 +130,9 @@ func (m *MyInterfaceMock) UnnamedParam(param1 string) {
 	m.UnnamedParamStub(param1)
 }
 
-// UnnamedVariadicParam is a stub for the MyInterface.UnnamedVariadicParam
+// UnnamedVariadicParam is a stub for the Example.UnnamedVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) UnnamedVariadicParam(param1 ...string) {
+func (m *ExampleMock) UnnamedVariadicParam(param1 ...string) {
 	atomic.AddInt32(&m.UnnamedVariadicParamCalled, 1)
 	if m.UnnamedVariadicParamStub == nil {
 		if m.T != nil {
@@ -143,9 +143,9 @@ func (m *MyInterfaceMock) UnnamedVariadicParam(param1 ...string) {
 	m.UnnamedVariadicParamStub(param1...)
 }
 
-// BlankParam is a stub for the MyInterface.BlankParam
+// BlankParam is a stub for the Example.BlankParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) BlankParam(param1 string) {
+func (m *ExampleMock) BlankParam(param1 string) {
 	atomic.AddInt32(&m.BlankParamCalled, 1)
 	if m.BlankParamStub == nil {
 		if m.T != nil {
@@ -156,9 +156,9 @@ func (m *MyInterfaceMock) BlankParam(param1 string) {
 	m.BlankParamStub(param1)
 }
 
-// BlankVariadicParam is a stub for the MyInterface.BlankVariadicParam
+// BlankVariadicParam is a stub for the Example.BlankVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) BlankVariadicParam(param1 ...string) {
+func (m *ExampleMock) BlankVariadicParam(param1 ...string) {
 	atomic.AddInt32(&m.BlankVariadicParamCalled, 1)
 	if m.BlankVariadicParamStub == nil {
 		if m.T != nil {
@@ -169,9 +169,9 @@ func (m *MyInterfaceMock) BlankVariadicParam(param1 ...string) {
 	m.BlankVariadicParamStub(param1...)
 }
 
-// NamedParam is a stub for the MyInterface.NamedParam
+// NamedParam is a stub for the Example.NamedParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) NamedParam(str string) {
+func (m *ExampleMock) NamedParam(str string) {
 	atomic.AddInt32(&m.NamedParamCalled, 1)
 	if m.NamedParamStub == nil {
 		if m.T != nil {
@@ -182,9 +182,9 @@ func (m *MyInterfaceMock) NamedParam(str string) {
 	m.NamedParamStub(str)
 }
 
-// NamedVariadicParam is a stub for the MyInterface.NamedVariadicParam
+// NamedVariadicParam is a stub for the Example.NamedVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) NamedVariadicParam(strs ...string) {
+func (m *ExampleMock) NamedVariadicParam(strs ...string) {
 	atomic.AddInt32(&m.NamedVariadicParamCalled, 1)
 	if m.NamedVariadicParamStub == nil {
 		if m.T != nil {
@@ -195,9 +195,9 @@ func (m *MyInterfaceMock) NamedVariadicParam(strs ...string) {
 	m.NamedVariadicParamStub(strs...)
 }
 
-// SameTypeNamedParams is a stub for the MyInterface.SameTypeNamedParams
+// SameTypeNamedParams is a stub for the Example.SameTypeNamedParams
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) SameTypeNamedParams(str1 string, str2 string) {
+func (m *ExampleMock) SameTypeNamedParams(str1 string, str2 string) {
 	atomic.AddInt32(&m.SameTypeNamedParamsCalled, 1)
 	if m.SameTypeNamedParamsStub == nil {
 		if m.T != nil {
@@ -208,9 +208,9 @@ func (m *MyInterfaceMock) SameTypeNamedParams(str1 string, str2 string) {
 	m.SameTypeNamedParamsStub(str1, str2)
 }
 
-// InternalTypeParam is a stub for the MyInterface.InternalTypeParam
+// InternalTypeParam is a stub for the Example.InternalTypeParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) InternalTypeParam(internal internal.Internal) {
+func (m *ExampleMock) InternalTypeParam(internal internal.Internal) {
 	atomic.AddInt32(&m.InternalTypeParamCalled, 1)
 	if m.InternalTypeParamStub == nil {
 		if m.T != nil {
@@ -221,9 +221,9 @@ func (m *MyInterfaceMock) InternalTypeParam(internal internal.Internal) {
 	m.InternalTypeParamStub(internal)
 }
 
-// ImportedParam is a stub for the MyInterface.ImportedParam
+// ImportedParam is a stub for the Example.ImportedParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) ImportedParam(tmpl template.Template) {
+func (m *ExampleMock) ImportedParam(tmpl template.Template) {
 	atomic.AddInt32(&m.ImportedParamCalled, 1)
 	if m.ImportedParamStub == nil {
 		if m.T != nil {
@@ -234,9 +234,9 @@ func (m *MyInterfaceMock) ImportedParam(tmpl template.Template) {
 	m.ImportedParamStub(tmpl)
 }
 
-// ImportedVariadicParam is a stub for the MyInterface.ImportedVariadicParam
+// ImportedVariadicParam is a stub for the Example.ImportedVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) ImportedVariadicParam(tmpl ...template.Template) {
+func (m *ExampleMock) ImportedVariadicParam(tmpl ...template.Template) {
 	atomic.AddInt32(&m.ImportedVariadicParamCalled, 1)
 	if m.ImportedVariadicParamStub == nil {
 		if m.T != nil {
@@ -247,9 +247,9 @@ func (m *MyInterfaceMock) ImportedVariadicParam(tmpl ...template.Template) {
 	m.ImportedVariadicParamStub(tmpl...)
 }
 
-// RenamedImportParam is a stub for the MyInterface.RenamedImportParam
+// RenamedImportParam is a stub for the Example.RenamedImportParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) RenamedImportParam(tmpl renamed.Template) {
+func (m *ExampleMock) RenamedImportParam(tmpl renamed.Template) {
 	atomic.AddInt32(&m.RenamedImportParamCalled, 1)
 	if m.RenamedImportParamStub == nil {
 		if m.T != nil {
@@ -260,9 +260,9 @@ func (m *MyInterfaceMock) RenamedImportParam(tmpl renamed.Template) {
 	m.RenamedImportParamStub(tmpl)
 }
 
-// RenamedImportVariadicParam is a stub for the MyInterface.RenamedImportVariadicParam
+// RenamedImportVariadicParam is a stub for the Example.RenamedImportVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) RenamedImportVariadicParam(tmpls ...renamed.Template) {
+func (m *ExampleMock) RenamedImportVariadicParam(tmpls ...renamed.Template) {
 	atomic.AddInt32(&m.RenamedImportVariadicParamCalled, 1)
 	if m.RenamedImportVariadicParamStub == nil {
 		if m.T != nil {
@@ -273,9 +273,9 @@ func (m *MyInterfaceMock) RenamedImportVariadicParam(tmpls ...renamed.Template) 
 	m.RenamedImportVariadicParamStub(tmpls...)
 }
 
-// DotImportParam is a stub for the MyInterface.DotImportParam
+// DotImportParam is a stub for the Example.DotImportParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) DotImportParam(file File) {
+func (m *ExampleMock) DotImportParam(file File) {
 	atomic.AddInt32(&m.DotImportParamCalled, 1)
 	if m.DotImportParamStub == nil {
 		if m.T != nil {
@@ -286,9 +286,9 @@ func (m *MyInterfaceMock) DotImportParam(file File) {
 	m.DotImportParamStub(file)
 }
 
-// DotImportVariadicParam is a stub for the MyInterface.DotImportVariadicParam
+// DotImportVariadicParam is a stub for the Example.DotImportVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) DotImportVariadicParam(files ...File) {
+func (m *ExampleMock) DotImportVariadicParam(files ...File) {
 	atomic.AddInt32(&m.DotImportVariadicParamCalled, 1)
 	if m.DotImportVariadicParamStub == nil {
 		if m.T != nil {
@@ -299,9 +299,9 @@ func (m *MyInterfaceMock) DotImportVariadicParam(files ...File) {
 	m.DotImportVariadicParamStub(files...)
 }
 
-// SelfReferentialParam is a stub for the MyInterface.SelfReferentialParam
+// SelfReferentialParam is a stub for the Example.SelfReferentialParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) SelfReferentialParam(intf MyInterface) {
+func (m *ExampleMock) SelfReferentialParam(intf Example) {
 	atomic.AddInt32(&m.SelfReferentialParamCalled, 1)
 	if m.SelfReferentialParamStub == nil {
 		if m.T != nil {
@@ -312,9 +312,9 @@ func (m *MyInterfaceMock) SelfReferentialParam(intf MyInterface) {
 	m.SelfReferentialParamStub(intf)
 }
 
-// SelfReferentialVariadicParam is a stub for the MyInterface.SelfReferentialVariadicParam
+// SelfReferentialVariadicParam is a stub for the Example.SelfReferentialVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) SelfReferentialVariadicParam(intf ...MyInterface) {
+func (m *ExampleMock) SelfReferentialVariadicParam(intf ...Example) {
 	atomic.AddInt32(&m.SelfReferentialVariadicParamCalled, 1)
 	if m.SelfReferentialVariadicParamStub == nil {
 		if m.T != nil {
@@ -325,9 +325,9 @@ func (m *MyInterfaceMock) SelfReferentialVariadicParam(intf ...MyInterface) {
 	m.SelfReferentialVariadicParamStub(intf...)
 }
 
-// StructParam is a stub for the MyInterface.StructParam
+// StructParam is a stub for the Example.StructParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) StructParam(obj struct{ num int }) {
+func (m *ExampleMock) StructParam(obj struct{ num int }) {
 	atomic.AddInt32(&m.StructParamCalled, 1)
 	if m.StructParamStub == nil {
 		if m.T != nil {
@@ -338,9 +338,9 @@ func (m *MyInterfaceMock) StructParam(obj struct{ num int }) {
 	m.StructParamStub(obj)
 }
 
-// StructVariadicParam is a stub for the MyInterface.StructVariadicParam
+// StructVariadicParam is a stub for the Example.StructVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) StructVariadicParam(objs ...struct{ num int }) {
+func (m *ExampleMock) StructVariadicParam(objs ...struct{ num int }) {
 	atomic.AddInt32(&m.StructVariadicParamCalled, 1)
 	if m.StructVariadicParamStub == nil {
 		if m.T != nil {
@@ -351,9 +351,9 @@ func (m *MyInterfaceMock) StructVariadicParam(objs ...struct{ num int }) {
 	m.StructVariadicParamStub(objs...)
 }
 
-// EmbeddedStructParam is a stub for the MyInterface.EmbeddedStructParam
+// EmbeddedStructParam is a stub for the Example.EmbeddedStructParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmbeddedStructParam(obj struct{ int }) {
+func (m *ExampleMock) EmbeddedStructParam(obj struct{ int }) {
 	atomic.AddInt32(&m.EmbeddedStructParamCalled, 1)
 	if m.EmbeddedStructParamStub == nil {
 		if m.T != nil {
@@ -364,9 +364,9 @@ func (m *MyInterfaceMock) EmbeddedStructParam(obj struct{ int }) {
 	m.EmbeddedStructParamStub(obj)
 }
 
-// EmbeddedStructVariadicParam is a stub for the MyInterface.EmbeddedStructVariadicParam
+// EmbeddedStructVariadicParam is a stub for the Example.EmbeddedStructVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmbeddedStructVariadicParam(objs ...struct{ int }) {
+func (m *ExampleMock) EmbeddedStructVariadicParam(objs ...struct{ int }) {
 	atomic.AddInt32(&m.EmbeddedStructVariadicParamCalled, 1)
 	if m.EmbeddedStructVariadicParamStub == nil {
 		if m.T != nil {
@@ -377,9 +377,9 @@ func (m *MyInterfaceMock) EmbeddedStructVariadicParam(objs ...struct{ int }) {
 	m.EmbeddedStructVariadicParamStub(objs...)
 }
 
-// EmptyInterfaceParam is a stub for the MyInterface.EmptyInterfaceParam
+// EmptyInterfaceParam is a stub for the Example.EmptyInterfaceParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmptyInterfaceParam(intf interface{}) {
+func (m *ExampleMock) EmptyInterfaceParam(intf interface{}) {
 	atomic.AddInt32(&m.EmptyInterfaceParamCalled, 1)
 	if m.EmptyInterfaceParamStub == nil {
 		if m.T != nil {
@@ -390,9 +390,9 @@ func (m *MyInterfaceMock) EmptyInterfaceParam(intf interface{}) {
 	m.EmptyInterfaceParamStub(intf)
 }
 
-// EmptyInterfaceVariadicParam is a stub for the MyInterface.EmptyInterfaceVariadicParam
+// EmptyInterfaceVariadicParam is a stub for the Example.EmptyInterfaceVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmptyInterfaceVariadicParam(intf ...interface{}) {
+func (m *ExampleMock) EmptyInterfaceVariadicParam(intf ...interface{}) {
 	atomic.AddInt32(&m.EmptyInterfaceVariadicParamCalled, 1)
 	if m.EmptyInterfaceVariadicParamStub == nil {
 		if m.T != nil {
@@ -403,9 +403,9 @@ func (m *MyInterfaceMock) EmptyInterfaceVariadicParam(intf ...interface{}) {
 	m.EmptyInterfaceVariadicParamStub(intf...)
 }
 
-// InterfaceParam is a stub for the MyInterface.InterfaceParam
+// InterfaceParam is a stub for the Example.InterfaceParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) InterfaceParam(intf interface{ MyFunc(num int) error }) {
+func (m *ExampleMock) InterfaceParam(intf interface{ MyFunc(num int) error }) {
 	atomic.AddInt32(&m.InterfaceParamCalled, 1)
 	if m.InterfaceParamStub == nil {
 		if m.T != nil {
@@ -416,9 +416,9 @@ func (m *MyInterfaceMock) InterfaceParam(intf interface{ MyFunc(num int) error }
 	m.InterfaceParamStub(intf)
 }
 
-// InterfaceVariadicParam is a stub for the MyInterface.InterfaceVariadicParam
+// InterfaceVariadicParam is a stub for the Example.InterfaceVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) InterfaceVariadicParam(intf ...interface{ MyFunc(num int) error }) {
+func (m *ExampleMock) InterfaceVariadicParam(intf ...interface{ MyFunc(num int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicParamCalled, 1)
 	if m.InterfaceVariadicParamStub == nil {
 		if m.T != nil {
@@ -429,9 +429,9 @@ func (m *MyInterfaceMock) InterfaceVariadicParam(intf ...interface{ MyFunc(num i
 	m.InterfaceVariadicParamStub(intf...)
 }
 
-// InterfaceVariadicFuncParam is a stub for the MyInterface.InterfaceVariadicFuncParam
+// InterfaceVariadicFuncParam is a stub for the Example.InterfaceVariadicFuncParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) InterfaceVariadicFuncParam(intf interface{ MyFunc(nums ...int) error }) {
+func (m *ExampleMock) InterfaceVariadicFuncParam(intf interface{ MyFunc(nums ...int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicFuncParamCalled, 1)
 	if m.InterfaceVariadicFuncParamStub == nil {
 		if m.T != nil {
@@ -442,9 +442,9 @@ func (m *MyInterfaceMock) InterfaceVariadicFuncParam(intf interface{ MyFunc(nums
 	m.InterfaceVariadicFuncParamStub(intf)
 }
 
-// InterfaceVariadicFuncVariadicParam is a stub for the MyInterface.InterfaceVariadicFuncVariadicParam
+// InterfaceVariadicFuncVariadicParam is a stub for the Example.InterfaceVariadicFuncVariadicParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) InterfaceVariadicFuncVariadicParam(intf ...interface{ MyFunc(nums ...int) error }) {
+func (m *ExampleMock) InterfaceVariadicFuncVariadicParam(intf ...interface{ MyFunc(nums ...int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicFuncVariadicParamCalled, 1)
 	if m.InterfaceVariadicFuncVariadicParamStub == nil {
 		if m.T != nil {
@@ -455,9 +455,9 @@ func (m *MyInterfaceMock) InterfaceVariadicFuncVariadicParam(intf ...interface{ 
 	m.InterfaceVariadicFuncVariadicParamStub(intf...)
 }
 
-// EmbeddedInterfaceParam is a stub for the MyInterface.EmbeddedInterfaceParam
+// EmbeddedInterfaceParam is a stub for the Example.EmbeddedInterfaceParam
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmbeddedInterfaceParam(intf interface{ fmt.Stringer }) {
+func (m *ExampleMock) EmbeddedInterfaceParam(intf interface{ fmt.Stringer }) {
 	atomic.AddInt32(&m.EmbeddedInterfaceParamCalled, 1)
 	if m.EmbeddedInterfaceParamStub == nil {
 		if m.T != nil {
@@ -468,9 +468,9 @@ func (m *MyInterfaceMock) EmbeddedInterfaceParam(intf interface{ fmt.Stringer })
 	m.EmbeddedInterfaceParamStub(intf)
 }
 
-// UnnamedReturn is a stub for the MyInterface.UnnamedReturn
+// UnnamedReturn is a stub for the Example.UnnamedReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) UnnamedReturn() error {
+func (m *ExampleMock) UnnamedReturn() error {
 	atomic.AddInt32(&m.UnnamedReturnCalled, 1)
 	if m.UnnamedReturnStub == nil {
 		if m.T != nil {
@@ -481,9 +481,9 @@ func (m *MyInterfaceMock) UnnamedReturn() error {
 	return m.UnnamedReturnStub()
 }
 
-// MultipleUnnamedReturn is a stub for the MyInterface.MultipleUnnamedReturn
+// MultipleUnnamedReturn is a stub for the Example.MultipleUnnamedReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) MultipleUnnamedReturn() (int, error) {
+func (m *ExampleMock) MultipleUnnamedReturn() (int, error) {
 	atomic.AddInt32(&m.MultipleUnnamedReturnCalled, 1)
 	if m.MultipleUnnamedReturnStub == nil {
 		if m.T != nil {
@@ -494,9 +494,9 @@ func (m *MyInterfaceMock) MultipleUnnamedReturn() (int, error) {
 	return m.MultipleUnnamedReturnStub()
 }
 
-// BlankReturn is a stub for the MyInterface.BlankReturn
+// BlankReturn is a stub for the Example.BlankReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) BlankReturn() (_ error) {
+func (m *ExampleMock) BlankReturn() (_ error) {
 	atomic.AddInt32(&m.BlankReturnCalled, 1)
 	if m.BlankReturnStub == nil {
 		if m.T != nil {
@@ -507,9 +507,9 @@ func (m *MyInterfaceMock) BlankReturn() (_ error) {
 	return m.BlankReturnStub()
 }
 
-// NamedReturn is a stub for the MyInterface.NamedReturn
+// NamedReturn is a stub for the Example.NamedReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) NamedReturn() (err error) {
+func (m *ExampleMock) NamedReturn() (err error) {
 	atomic.AddInt32(&m.NamedReturnCalled, 1)
 	if m.NamedReturnStub == nil {
 		if m.T != nil {
@@ -520,9 +520,9 @@ func (m *MyInterfaceMock) NamedReturn() (err error) {
 	return m.NamedReturnStub()
 }
 
-// SameTypeNamedReturn is a stub for the MyInterface.SameTypeNamedReturn
+// SameTypeNamedReturn is a stub for the Example.SameTypeNamedReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) SameTypeNamedReturn() (err1 error, err2 error) {
+func (m *ExampleMock) SameTypeNamedReturn() (err1 error, err2 error) {
 	atomic.AddInt32(&m.SameTypeNamedReturnCalled, 1)
 	if m.SameTypeNamedReturnStub == nil {
 		if m.T != nil {
@@ -533,9 +533,9 @@ func (m *MyInterfaceMock) SameTypeNamedReturn() (err1 error, err2 error) {
 	return m.SameTypeNamedReturnStub()
 }
 
-// RenamedImportReturn is a stub for the MyInterface.RenamedImportReturn
+// RenamedImportReturn is a stub for the Example.RenamedImportReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) RenamedImportReturn() (tmpl renamed.Template) {
+func (m *ExampleMock) RenamedImportReturn() (tmpl renamed.Template) {
 	atomic.AddInt32(&m.RenamedImportReturnCalled, 1)
 	if m.RenamedImportReturnStub == nil {
 		if m.T != nil {
@@ -546,9 +546,9 @@ func (m *MyInterfaceMock) RenamedImportReturn() (tmpl renamed.Template) {
 	return m.RenamedImportReturnStub()
 }
 
-// DotImportReturn is a stub for the MyInterface.DotImportReturn
+// DotImportReturn is a stub for the Example.DotImportReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) DotImportReturn() (file File) {
+func (m *ExampleMock) DotImportReturn() (file File) {
 	atomic.AddInt32(&m.DotImportReturnCalled, 1)
 	if m.DotImportReturnStub == nil {
 		if m.T != nil {
@@ -559,9 +559,9 @@ func (m *MyInterfaceMock) DotImportReturn() (file File) {
 	return m.DotImportReturnStub()
 }
 
-// SelfReferentialReturn is a stub for the MyInterface.SelfReferentialReturn
+// SelfReferentialReturn is a stub for the Example.SelfReferentialReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) SelfReferentialReturn() (intf MyInterface) {
+func (m *ExampleMock) SelfReferentialReturn() (intf Example) {
 	atomic.AddInt32(&m.SelfReferentialReturnCalled, 1)
 	if m.SelfReferentialReturnStub == nil {
 		if m.T != nil {
@@ -572,9 +572,9 @@ func (m *MyInterfaceMock) SelfReferentialReturn() (intf MyInterface) {
 	return m.SelfReferentialReturnStub()
 }
 
-// StructReturn is a stub for the MyInterface.StructReturn
+// StructReturn is a stub for the Example.StructReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) StructReturn() (obj struct{ num int }) {
+func (m *ExampleMock) StructReturn() (obj struct{ num int }) {
 	atomic.AddInt32(&m.StructReturnCalled, 1)
 	if m.StructReturnStub == nil {
 		if m.T != nil {
@@ -585,9 +585,9 @@ func (m *MyInterfaceMock) StructReturn() (obj struct{ num int }) {
 	return m.StructReturnStub()
 }
 
-// EmbeddedStructReturn is a stub for the MyInterface.EmbeddedStructReturn
+// EmbeddedStructReturn is a stub for the Example.EmbeddedStructReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmbeddedStructReturn() (obj struct{ int }) {
+func (m *ExampleMock) EmbeddedStructReturn() (obj struct{ int }) {
 	atomic.AddInt32(&m.EmbeddedStructReturnCalled, 1)
 	if m.EmbeddedStructReturnStub == nil {
 		if m.T != nil {
@@ -598,9 +598,9 @@ func (m *MyInterfaceMock) EmbeddedStructReturn() (obj struct{ int }) {
 	return m.EmbeddedStructReturnStub()
 }
 
-// EmptyInterfaceReturn is a stub for the MyInterface.EmptyInterfaceReturn
+// EmptyInterfaceReturn is a stub for the Example.EmptyInterfaceReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmptyInterfaceReturn() (intf interface{}) {
+func (m *ExampleMock) EmptyInterfaceReturn() (intf interface{}) {
 	atomic.AddInt32(&m.EmptyInterfaceReturnCalled, 1)
 	if m.EmptyInterfaceReturnStub == nil {
 		if m.T != nil {
@@ -611,9 +611,9 @@ func (m *MyInterfaceMock) EmptyInterfaceReturn() (intf interface{}) {
 	return m.EmptyInterfaceReturnStub()
 }
 
-// InterfaceReturn is a stub for the MyInterface.InterfaceReturn
+// InterfaceReturn is a stub for the Example.InterfaceReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) InterfaceReturn() (intf interface{ MyFunc(num int) error }) {
+func (m *ExampleMock) InterfaceReturn() (intf interface{ MyFunc(num int) error }) {
 	atomic.AddInt32(&m.InterfaceReturnCalled, 1)
 	if m.InterfaceReturnStub == nil {
 		if m.T != nil {
@@ -624,9 +624,9 @@ func (m *MyInterfaceMock) InterfaceReturn() (intf interface{ MyFunc(num int) err
 	return m.InterfaceReturnStub()
 }
 
-// InterfaceVariadicFuncReturn is a stub for the MyInterface.InterfaceVariadicFuncReturn
+// InterfaceVariadicFuncReturn is a stub for the Example.InterfaceVariadicFuncReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) InterfaceVariadicFuncReturn() (intf interface{ MyFunc(nums ...int) error }) {
+func (m *ExampleMock) InterfaceVariadicFuncReturn() (intf interface{ MyFunc(nums ...int) error }) {
 	atomic.AddInt32(&m.InterfaceVariadicFuncReturnCalled, 1)
 	if m.InterfaceVariadicFuncReturnStub == nil {
 		if m.T != nil {
@@ -637,9 +637,9 @@ func (m *MyInterfaceMock) InterfaceVariadicFuncReturn() (intf interface{ MyFunc(
 	return m.InterfaceVariadicFuncReturnStub()
 }
 
-// EmbeddedInterfaceReturn is a stub for the MyInterface.EmbeddedInterfaceReturn
+// EmbeddedInterfaceReturn is a stub for the Example.EmbeddedInterfaceReturn
 // method that records the number of times it has been called.
-func (m *MyInterfaceMock) EmbeddedInterfaceReturn() (intf interface{ fmt.Stringer }) {
+func (m *ExampleMock) EmbeddedInterfaceReturn() (intf interface{ fmt.Stringer }) {
 	atomic.AddInt32(&m.EmbeddedInterfaceReturnCalled, 1)
 	if m.EmbeddedInterfaceReturnStub == nil {
 		if m.T != nil {
