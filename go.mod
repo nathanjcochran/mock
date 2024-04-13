@@ -1,8 +1,10 @@
 module github.com/nathanjcochran/mock
 
-go 1.12
+go 1.22.2
 
 require (
-	github.com/pkg/errors v0.8.1
-	golang.org/x/tools v0.0.0-20190516015132-d1a3278ee749
+	github.com/pkg/errors v0.9.1
+	golang.org/x/tools v0.19.0
 )
+
+require golang.org/x/mod v0.16.0 // indirect

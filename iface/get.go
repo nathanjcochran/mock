@@ -59,7 +59,7 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 
 	// Make sure that none of the types involved in the
 	// interface's definition were invalid/had errors
-	if !ValidateType(ifaceType) {
+	if !ValidateType(ifaceObj.Type()) {
 		return Interface{}, &TypeErrors{Errs: pkg.Errors}
 	}
 
@@ -71,54 +71,101 @@ func GetInterface(dir, ifaceName string) (Interface, error) {
 		Package: pkg.Name,
 		Name:    ifaceObj.Name(),
 	}
+	qualifier := Qualify(pkg.Types, imps, &iface.Imports)
 
-	// Iterate through the interface's methods
-	for i := 0; i < ifaceType.NumMethods(); i++ {
-		methodObj := ifaceType.Method(i)
-		method := Method{
-			Name: methodObj.Name(),
-			pos:  methodObj.Pos(),
+	// Record type parameter list info.
+	if ifaceNamed, ok := ifaceObj.Type().(*types.Named); ok {
+		typeParams := ifaceNamed.TypeParams()
+		for i := range typeParams.Len() {
+			typeParam := typeParams.At(i)
+			iface.TypeParams = append(iface.TypeParams, TypeParam{
+				Name:       typeParam.Obj().Name(),
+				Constraint: types.TypeString(typeParam.Constraint(), qualifier),
+			})
 		}
+	}
 
-		sig, ok := methodObj.Type().(*types.Signature)
-		if !ok {
-			return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
-		}
-
-		// Keep track of the names and types of the parameters
-		paramsTuple := sig.Params()
-		for j := 0; j < paramsTuple.Len(); j++ {
-			paramObj := paramsTuple.At(j)
-			param := Param{
-				Name: paramObj.Name(),
-				Type: types.TypeString(paramObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+	// Iterate through each embedded interface's explicit methods
+	for _, ifaceType := range explodeInterface(ifaceType) {
+		for i := range ifaceType.NumExplicitMethods() {
+			methodObj := ifaceType.ExplicitMethod(i)
+			method := Method{
+				Name:     methodObj.Name(),
+				srcIface: ifaceType.String(),
+				pos:      methodObj.Pos(),
 			}
-			method.Params = append(method.Params, param)
-		}
 
-		// Mark whether the last parameter is variadic
-		if len(method.Params) > 0 && sig.Variadic() {
-			method.Params[len(method.Params)-1].Variadic = true
-		}
-
-		// Keep track of the names and types of the results
-		resultsTuple := sig.Results()
-		for j := 0; j < resultsTuple.Len(); j++ {
-			resultObj := resultsTuple.At(j)
-			result := Result{
-				Name: resultObj.Name(),
-				Type: types.TypeString(resultObj.Type(), Qualify(pkg.Types, imps, &iface.Imports)),
+			sig, ok := methodObj.Type().(*types.Signature)
+			if !ok {
+				return Interface{}, fmt.Errorf("%s is not a method signature", methodObj.Name())
 			}
-			method.Results = append(method.Results, result)
-		}
 
-		iface.Methods = append(iface.Methods, method)
+			// Keep track of the names and types of the parameters
+			paramsTuple := sig.Params()
+			for j := 0; j < paramsTuple.Len(); j++ {
+				paramObj := paramsTuple.At(j)
+				param := Param{
+					Name: paramObj.Name(),
+					Type: types.TypeString(paramObj.Type(), qualifier),
+				}
+				method.Params = append(method.Params, param)
+			}
+
+			// Mark whether the last parameter is variadic
+			if len(method.Params) > 0 && sig.Variadic() {
+				method.Params[len(method.Params)-1].Variadic = true
+			}
+
+			// Keep track of the names and types of the results
+			resultsTuple := sig.Results()
+			for j := 0; j < resultsTuple.Len(); j++ {
+				resultObj := resultsTuple.At(j)
+				result := Result{
+					Name: resultObj.Name(),
+					Type: types.TypeString(resultObj.Type(), qualifier),
+				}
+				method.Results = append(method.Results, result)
+			}
+
+			iface.Methods = append(iface.Methods, method)
+		}
 	}
 
 	// Preserve the original ordering of the methods
 	sort.Sort(iface.Methods)
 
 	return iface, nil
+}
+
+// explodeInterface traverses an interface type, returning the original
+// interface along with all transitively embedded interfaces.
+func explodeInterface(iface *types.Interface) []*types.Interface {
+	var (
+		result    []*types.Interface
+		workQueue = []*types.Interface{iface}
+		visited   = map[string]bool{}
+	)
+	for len(workQueue) > 0 {
+		current := workQueue[0]
+		workQueue = workQueue[1:]
+		currentID := current.String()
+		if !visited[currentID] {
+			visited[currentID] = true
+			result = append(result, current)
+			for i := range current.NumEmbeddeds() {
+				switch embedded := current.EmbeddedType(i).(type) {
+				case *types.Interface:
+					workQueue = append(workQueue, embedded)
+				case *types.Named:
+					switch underlying := embedded.Underlying().(type) {
+					case *types.Interface:
+						workQueue = append(workQueue, underlying)
+					}
+				}
+			}
+		}
+	}
+	return result
 }
 
 func Qualify(pkg *types.Package, imps []Import, usedImps *[]Import) types.Qualifier {
@@ -210,7 +257,7 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Struct:
-		for i := 0; i < t.NumFields(); i++ {
+		for i := range t.NumFields() {
 			if !validateType(t.Field(i).Type(), visited) {
 				return false
 			}
@@ -221,7 +268,7 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Tuple:
-		for i := 0; i < t.Len(); i++ {
+		for i := range t.Len() {
 			if !validateType(t.At(i).Type(), visited) {
 				return false
 			}
@@ -233,8 +280,21 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 			validateType(t.Results(), visited)
 
 	case *types.Interface:
-		for i := 0; i < t.NumMethods(); i++ {
+		for i := range t.NumEmbeddeds() {
+			if !validateType(t.EmbeddedType(i), visited) {
+				return false
+			}
+		}
+		for i := range t.NumMethods() {
 			if !validateType(t.Method(i).Type(), visited) {
+				return false
+			}
+		}
+		return true
+
+	case *types.Union:
+		for i := range t.Len() {
+			if !validateType(t.Term(i).Type(), visited) {
 				return false
 			}
 		}
@@ -248,6 +308,12 @@ func validateType(typ types.Type, visited *[]types.Type) bool {
 		return validateType(t.Elem(), visited)
 
 	case *types.Named:
+		typeParams := t.TypeParams()
+		for i := range typeParams.Len() {
+			if !validateType(typeParams.At(i).Constraint(), visited) {
+				return false
+			}
+		}
 		return validateType(t.Underlying(), visited)
 
 	default:

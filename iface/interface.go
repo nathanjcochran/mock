@@ -1,16 +1,53 @@
 package iface
 
 import (
+	"cmp"
 	"fmt"
 	"go/token"
 	"strings"
 )
 
 type Interface struct {
-	Name    string
-	Package string
-	Imports []Import
-	Methods Methods
+	Name       string
+	TypeParams TypeParams
+	Package    string
+	Imports    []Import
+	Methods    Methods
+}
+
+type TypeParam struct {
+	Name       string
+	Constraint string
+}
+
+func (t TypeParam) String() string {
+	return fmt.Sprintf("%s %s", t.Name, t.Constraint)
+}
+
+type TypeParams []TypeParam
+
+func (t TypeParams) mapString(f func(TypeParam) string) string {
+	if len(t) == 0 {
+		return ""
+	}
+	var s strings.Builder
+	s.WriteByte('[')
+	for i, typeParam := range t {
+		if i > 0 {
+			s.WriteString(", ")
+		}
+		s.WriteString(f(typeParam))
+	}
+	s.WriteByte(']')
+	return s.String()
+}
+
+func (t TypeParams) String() string {
+	return t.mapString(TypeParam.String)
+}
+
+func (t TypeParams) Names() string {
+	return t.mapString(func(t TypeParam) string { return t.Name })
 }
 
 type Import struct {
@@ -30,14 +67,28 @@ type Method struct {
 	Params  Params
 	Results Results
 
-	pos token.Pos
+	// String representation of the interface explicitly requiring this method
+	srcIface string
+	pos      token.Pos
 }
 
 type Methods []Method
 
-func (m Methods) Len() int           { return len(m) }
-func (m Methods) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
-func (m Methods) Less(i, j int) bool { return m[i].pos < m[j].pos }
+func (m Methods) Len() int      { return len(m) }
+func (m Methods) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
+func (m Methods) Less(i, j int) bool {
+	// Group methods by source interface. This grouping matters when the mocked
+	// interface comprises interfaces defined in multiple files, in which case
+	// the token positions alone don't have a stable ordering.
+	switch cmp.Compare(m[i].srcIface, m[j].srcIface) {
+	case -1: // less
+		return true
+	case 1: // greater
+		return false
+	default: // equal
+		return m[i].pos < m[j].pos
+	}
+}
 
 type Param struct {
 	Name     string
